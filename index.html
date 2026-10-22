@@ -1,0 +1,2083 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>작도 연습</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Song+Myung&family=Noto+Serif+KR:wght@600;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f3ee;
+    --panel: #ffffff;
+    --ink: #1f2430;
+    --muted: #6b7280;
+    --line: #e2ddd1;
+    --back: #2f4b7c;
+    --back2: #3d5f99;
+    --q: #eef3ff;
+    --a: #fff3dd;
+    --a-ink: #9a5b00;
+    --hl: #e4572e;
+    --ok: #2a9d6f;
+    --bad: #d64545;
+    --shadow: 0 1px 2px rgba(31,36,48,.06), 0 4px 14px rgba(31,36,48,.06);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; color: var(--ink);
+    background-color: var(--bg);
+    background-image: radial-gradient(rgba(47,75,124,.09) 1px, transparent 1px);
+    background-size: 22px 22px;
+    font-family: "Pretendard", "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+    display: flex; flex-direction: column; height: 100dvh; overflow: hidden;
+    -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+  }
+  button {
+    font: inherit; font-size: 1rem; min-height: 44px; padding: 8px 14px; border-radius: 12px;
+    border: 0; background: var(--back); color: #fff; cursor: pointer; touch-action: manipulation;
+    transition: transform .08s, box-shadow .15s, background .15s;
+  }
+  button:active:not(:disabled) { transform: scale(.97); }
+  button.ghost { background: var(--panel); color: var(--back); border: 1px solid #c9d3e6; }
+  button:disabled { opacity: .45; cursor: default; }
+  .hidden { display: none !important; }
+
+  /* ───────── 표지 ───────── */
+  .cover { flex: 1; overflow-y: auto; overflow-x: hidden; position: relative; }
+  .cover-in { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 40px 24px 40px; }
+  .cover-body { display: grid; grid-template-columns: 1fr 330px; gap: 18px; align-items: start; }
+  .cover-body .mode-grid { grid-template-columns: 1fr 1fr; }
+  .records {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 16px;
+    box-shadow: var(--shadow); position: relative; overflow: hidden;
+  }
+  .records::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 5px; background: linear-gradient(90deg, #f6bd45, #d48a00); }
+  .records h3 { margin: 4px 0 10px; font-size: 1.1rem; }
+  .records table { width: 100%; border-collapse: collapse; font-size: .92rem; font-variant-numeric: tabular-nums; }
+  .records th { white-space: nowrap; text-align: left; color: var(--muted); font-weight: 600; font-size: .8rem; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+  .records td { padding: 7px 6px; border-bottom: 1px dashed var(--line); }
+  .records tr.best td { background: #fff7e3; font-weight: 700; }
+  .records .rk { width: 34px; text-align: center; }
+  .records .tm { font-weight: 700; white-space: nowrap; }
+  .records .dt { color: var(--muted); font-size: .8rem; white-space: nowrap; }
+  .kind { display: inline-block; font-size: .78rem; font-weight: 800; color: #fff; border-radius: 6px; padding: 2px 7px; }
+  .k-sss { background: #e4572e; } .k-sas { background: #7b4bd1; } .k-asa { background: #2a9d6f; }
+  .rec-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
+  .rec-tab {
+    min-height: 40px; padding: 6px 2px; font-weight: 800; font-size: .86rem; border-radius: 10px;
+    background: #fff; color: var(--muted); border: 2px solid var(--line);
+    white-space: nowrap; letter-spacing: -.02em;
+  }
+  .rec-tab small { margin-left: 3px; font-size: .72rem; font-weight: 700; opacity: .8; }
+  .rec-tab.on { color: #fff; border-color: transparent; }
+  .rec-tab.on.k-sss { background: #e4572e; } .rec-tab.on.k-sas { background: #7b4bd1; } .rec-tab.on.k-asa { background: #2a9d6f; }
+  .rec-tab:not(.on) { background: #fff; }
+  .rec-foot { display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: .8rem; margin: 10px 0 0; }
+  .rec-empty { color: var(--muted); font-size: .92rem; line-height: 1.6; margin: 6px 0 4px; }
+  button.link { background: none; color: var(--muted); min-height: 0; padding: 2px 4px; font-size: .8rem; text-decoration: underline; }
+  .timer {
+    font-variant-numeric: tabular-nums; font-weight: 800; font-size: 1.05rem; white-space: nowrap;
+    background: #fff; color: #9a5b00; border: 2px solid #f6bd45; border-radius: 999px; padding: 4px 14px;
+  }
+  .timer.done { background: var(--ok); color: #fff; border-color: var(--ok); }
+  .deco { position: absolute; pointer-events: none; z-index: 0; }
+  .deco.d1 { right: -90px; top: -70px; width: 420px; }
+  .deco.d2 { left: -110px; bottom: -120px; width: 380px; }
+  .hero { text-align: center; margin-bottom: 34px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px; font-size: .9rem; font-weight: 700;
+    color: var(--back); background: #fff; border: 1px solid #c9d3e6; border-radius: 999px; padding: 6px 14px;
+  }
+  .hero h1 { font-size: clamp(2rem, 5vw, 3.1rem); line-height: 1.2; margin: 18px 0 12px; letter-spacing: -.02em; }
+  .hero h1 em {
+    font-style: normal; color: var(--back);
+    background: linear-gradient(transparent 62%, #ffd98a 62%, #ffd98a 92%, transparent 92%);
+    padding: 0 4px;
+  }
+  .hero p { color: var(--muted); font-size: 1.08rem; margin: 0; }
+  .mode-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .mode-card {
+    position: relative; text-align: left; background: var(--panel); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 18px; padding: 18px 18px 16px; min-height: 0;
+    box-shadow: var(--shadow); display: flex; gap: 14px; align-items: center; overflow: hidden;
+  }
+  .mode-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--c); }
+  .mode-card:hover { box-shadow: 0 2px 4px rgba(31,36,48,.08), 0 10px 26px rgba(31,36,48,.10); }
+  .mode-card .ic {
+    flex-shrink: 0; width: 78px; height: 78px; border-radius: 16px; display: grid; place-items: center;
+    background: var(--cbg); color: var(--c);
+  }
+  .mode-card .ic svg { width: 60px; height: 60px; }
+  .mode-card .num { font-size: .78rem; font-weight: 800; color: var(--c); letter-spacing: .04em; }
+  .mode-card h2 { margin: 2px 0 4px; font-size: 1.3rem; }
+  .mode-card p { margin: 0; color: var(--muted); font-size: .92rem; line-height: 1.4; }
+  .mode-card .done {
+    position: absolute; right: 12px; top: 12px; font-size: .75rem; font-weight: 700; color: #fff;
+    background: var(--ok); border-radius: 999px; padding: 2px 8px;
+  }
+  .mode-card.challenge { background: linear-gradient(135deg, #fff 55%, #fff4dc); }
+  .cover-foot { text-align: center; color: var(--muted); font-size: .9rem; margin-top: 26px; }
+  .cover-foot b { color: var(--ink); }
+
+  /* ───────── 상단 ───────── */
+  header {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 8px 14px; background: rgba(255,255,255,.92); border-bottom: 1px solid var(--line);
+    backdrop-filter: blur(6px);
+  }
+  .brand { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.1rem; white-space: nowrap; margin-right: 4px; }
+  .brand svg { width: 30px; height: 30px; }
+  .gear { width: 44px; padding: 0; display: grid; place-items: center; background: #fdf8ea; color: #3b3022; border: 1px solid #cdb98d; }
+  .gear svg { width: 24px; height: 24px; transition: transform .4s; }
+  .gear:hover svg { transform: rotate(60deg); }
+  header .gear { margin-left: auto; }
+  .cover > .gear { position: absolute; right: 16px; top: 14px; z-index: 3; }
+  .home { background: transparent; color: var(--back); border: 1px solid #c9d3e6; padding: 6px 12px; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tabs button { background: #fff; color: var(--ink); border: 1px solid var(--line); font-size: .95rem; padding: 6px 14px; border-radius: 999px; }
+  .tabs button.on { background: var(--back); color: #fff; border-color: var(--back); }
+  .tabs button small { display: inline-block; margin-left: 5px; font-size: .72rem; padding: 1px 6px; border-radius: 999px; background: var(--ok); color: #fff; }
+
+  #app { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  main { flex: 1; min-height: 0; display: flex; gap: 12px; padding: 12px; }
+  .stage { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+  .task {
+    background: linear-gradient(90deg, #eef3ff, #f6f8ff); color: var(--back);
+    border: 1px solid #d7e1f5; border-radius: 14px; padding: 10px 14px;
+    font-weight: 700; font-size: 1.08rem; line-height: 1.4;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: space-between;
+  }
+  .task .q { display: flex; align-items: center; gap: 10px; }
+  .task .q i {
+    font-style: normal; flex-shrink: 0; font-size: .8rem; background: var(--back); color: #fff;
+    border-radius: 8px; padding: 3px 8px;
+  }
+  .variants { display: flex; gap: 6px; }
+  .variants button { min-height: 36px; padding: 4px 12px; font-size: .9rem; background: #fff; color: var(--back); border: 1px solid #c9d3e6; border-radius: 999px; }
+  .variants button.on { background: var(--back); color: #fff; border-color: var(--back); }
+  .toolbar {
+    display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 6px; box-shadow: var(--shadow);
+  }
+  .tool { background: transparent; color: var(--ink); border: 2px solid transparent; display: inline-flex; align-items: center; gap: 6px; }
+  .tool svg { width: 22px; height: 22px; }
+  .tool:hover { background: #f3f5fa; }
+  .tool.on { border-color: var(--back); background: var(--back); color: #fff; }
+  /* 도구 그림을 그 도구로 그린 선의 색으로 */
+  .tool[data-tool="segment"]:not(.on) svg { color: #1fa45a; } .tool[data-tool="ray"]:not(.on) svg { color: #2aa7e6; }
+  .tool[data-tool="line"]:not(.on) svg { color: #e8b400; } .tool[data-tool="compass"]:not(.on) svg { color: #ff8a1d; }
+  .toolbar .sep { width: 1px; align-self: stretch; background: var(--line); margin: 0 4px; }
+  .toolbar .right { margin-left: auto; display: flex; gap: 6px; }
+  .canvas-wrap {
+    flex: 1; min-height: 0; position: relative; background: var(--panel);
+    border: 1px solid var(--line); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow);
+  }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; display: block; }
+  .status {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 8px 12px; font-size: .95rem; color: var(--ink); min-height: 40px; box-shadow: var(--shadow);
+  }
+  .status b { color: var(--back); }
+
+  /* 오른쪽 */
+  aside { width: 310px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .actions .check { grid-column: 1 / -1; background: var(--ok); font-size: 1.12rem; font-weight: 800; min-height: 52px; box-shadow: 0 3px 0 #1f7a56; }
+  .actions .hintbtn { background: #f6bd45; color: #3b2a00; font-weight: 700; box-shadow: 0 3px 0 #d39a22; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 14px; box-shadow: var(--shadow); }
+  .card h3 { margin: 0 0 8px; font-size: .95rem; color: var(--muted); }
+  .hints ol { margin: 0; padding-left: 1.3em; line-height: 1.5; font-size: .93rem; }
+  .hints li { margin-bottom: 6px; }
+  .hints li:last-child { background: var(--a); border-radius: 6px; padding: 2px 6px; }
+  .hints .empty { color: var(--muted); font-size: .9rem; margin: 0; line-height: 1.5; }
+  .hint-now {
+    margin: 0; font-size: .97rem; line-height: 1.55; padding: 10px 12px; border-radius: 10px;
+    background: #fff1ea; border-left: 4px solid var(--hl);
+  }
+  .hint-now b { display: block; color: var(--hl); margin-bottom: 2px; }
+  .hint-now.bad { background: #fdecec; border-color: var(--bad); }
+  .hint-now.bad b { color: var(--bad); }
+  .hint-now.ok { background: #e7f6ef; border-color: var(--ok); }
+  .hint-now.ok b { color: var(--ok); }
+  .score { font-size: 2.6rem; font-weight: 800; margin: 0 0 6px; font-variant-numeric: tabular-nums; }
+  .score.ok { color: var(--ok); }
+  .score.bad { color: var(--bad); }
+  .meter { height: 8px; background: #eee9dc; border-radius: 4px; overflow: hidden; margin-bottom: 10px; }
+  .meter i { display: block; height: 100%; border-radius: 4px; background: var(--bad); transition: width .4s; }
+  .meter.ok i { background: var(--ok); }
+  .retry { width: 100%; margin-top: 12px; background: var(--back); color: #fff; font-weight: 800; font-size: 1.05rem; min-height: 46px; }
+  .fb { list-style: none; margin: 0; padding: 0; font-size: .93rem; line-height: 1.45; }
+  .fb li { padding: 6px 0 6px 24px; position: relative; border-top: 1px dashed var(--line); }
+  .fb li:first-child { border-top: 0; }
+  .fb li::before { position: absolute; left: 2px; top: 6px; font-weight: 800; }
+  .fb li.ok::before { content: "✓"; color: var(--ok); }
+  .fb li.bad::before { content: "✗"; color: var(--bad); }
+  .fb li.tip::before { content: "!"; color: var(--a-ink); left: 7px; }
+  .legend { font-size: .85rem; color: var(--muted); line-height: 1.75; }
+  .dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; vertical-align: -1px; margin-right: 4px; }
+  .dot.inter { background: var(--back); }
+  .dot.free { border: 2px solid var(--hl); background: #fff; }
+
+  /* ───────── 한지 스타일 ───────── */
+  :root {
+    --bg: #ece2c6; --panel: #fbf6e8; --line: #d8c7a0; --ink: #2a2118; --muted: #7a6a52;
+    --seal: #b8322a;
+    /* 한지 결: 잔 얼룩(노이즈) + 가로로 길게 흐르는 닥나무 섬유 */
+    --grain: none; --fiber: none;                           /* 잔주름(결) 없이 깨끗한 종이 */
+    /* 두루마리 종이의 거북등(육각형) 무늬 */
+    /* 족자 모서리 뇌문(ㄱ자 무늬): 네 모서리 방향으로 돌려 씀 */
+    --fret-tl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M1 15V1H15M4 15V4H12M4 11H9V7H7' fill='none' stroke='%23c9ad92' stroke-width='1.2'/%3E%3C/svg%3E");
+    --fret-tr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cg transform='matrix(-1 0 0 1 16 0)'%3E%3Cpath d='M1 15V1H15M4 15V4H12M4 11H9V7H7' fill='none' stroke='%23c9ad92' stroke-width='1.2'/%3E%3C/g%3E%3C/svg%3E");
+    --fret-bl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cg transform='matrix(1 0 0 -1 0 16)'%3E%3Cpath d='M1 15V1H15M4 15V4H12M4 11H9V7H7' fill='none' stroke='%23c9ad92' stroke-width='1.2'/%3E%3C/g%3E%3C/svg%3E");
+    --fret-br: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cg transform='matrix(-1 0 0 -1 16 16)'%3E%3Cpath d='M1 15V1H15M4 15V4H12M4 11H9V7H7' fill='none' stroke='%23c9ad92' stroke-width='1.2'/%3E%3C/g%3E%3C/svg%3E");
+    --shadow: 0 1px 0 rgba(255,255,255,.6) inset, 0 2px 3px rgba(80,55,20,.08), 0 8px 22px rgba(80,55,20,.10);
+    --serif: "Noto Serif KR", "Batang", "바탕", serif;
+  }
+  body { background: radial-gradient(ellipse at 50% 40%, #f8f3e6 0%, #f0e8d4 75%, #e9dfc6 100%) fixed; }
+  /* 종이 판: 카드·도구막대·상태줄·그림판 */
+  .card, .toolbar, .status, .records, .mode-card, .canvas-wrap {
+    background-color: var(--panel); background-image: var(--grain), var(--fiber);
+    border: 1px solid var(--line); border-radius: 6px; box-shadow: var(--shadow);
+  }
+  .canvas-wrap { background-color: #fbf6e9; background-image: none; border-color: #cdb98d; }   /* 그림판은 결 없이 깨끗하게 */
+  button { border-radius: 6px; }
+  button.ghost, .home { background: #fdf8ea; color: #3b3022; border: 1px solid #cdb98d; }
+  .actions .check { background: #2f4b7c; box-shadow: 0 3px 0 #1d3156; font-family: var(--serif); letter-spacing: .1em; }
+  .actions .hintbtn { background: #e9b949; box-shadow: 0 3px 0 #b8891f; }
+  .tool { border-radius: 6px; }
+  .tool:hover { background: rgba(140,100,40,.08); }
+  .tool.on { background: #2a2118; border-color: #2a2118; }
+  .task { background: rgba(255,250,236,.85); background-image: var(--grain); color: #2a2118; border: 1px solid var(--line); border-left: 5px solid #2f4b7c; border-radius: 6px; }
+  .task .q i { background: var(--seal); border-radius: 3px; font-family: var(--serif); }
+  .variants button, .tabs button { background: #fdf8ea; border-color: #cdb98d; color: #3b3022; }
+  .variants button.on, .tabs button.on { background: #2a2118; border-color: #2a2118; color: #fff; }
+  header { background: rgba(244,236,214,.9); background-image: var(--grain); border-bottom: 2px solid #2a2118; box-shadow: 0 3px 0 rgba(42,33,24,.12); }
+  .brand { font-family: var(--serif); font-weight: 900; letter-spacing: .25em; }
+  .brand .hj { color: var(--seal); font-size: .85em; letter-spacing: .05em; border: 1.5px solid var(--seal); border-radius: 3px; padding: 0 4px; }
+  .card h3 { font-family: var(--serif); color: #5a4a32; }
+  .hints li:last-child { background: rgba(233,185,73,.25); }
+  .meter { background: rgba(120,90,40,.15); }
+
+  /* 표지: 조선 시대 문서(인찰지)처럼 붉은 테두리와 세로 계선 */
+  .cover { display: flex; flex-direction: column; padding: 26px 0 34px; }   /* 화면이 넉넉하면 표지를 위아래 가운데에 */
+  .cover-in.doc {
+    margin: auto; padding: 42px 46px 36px; max-width: 1180px; width: 100%;
+    background-color: #fcf8ee; background-image: repeating-linear-gradient(90deg, transparent 0 58px, rgba(184,50,42,.05) 58px 59px);
+    border: 2px solid rgba(184,50,42,.55); outline: 1px solid rgba(184,50,42,.35); outline-offset: -9px;
+    box-shadow: inset 0 0 50px rgba(150,110,50,.10), 0 12px 34px rgba(70,45,15,.14);
+    border-radius: 3px;
+  }
+  .hero { margin-bottom: 30px; }
+  .badge { background: transparent; color: #5a4a32; border: 1px solid rgba(90,74,50,.4); border-radius: 3px; font-family: var(--serif); }
+  .title-row { display: flex; align-items: center; justify-content: center; gap: 26px; margin: 18px 0 6px; }
+  .title-row h1 {
+    margin: 0; font-family: "Song Myung", var(--serif); font-weight: 400; font-size: clamp(4rem, 11vw, 7.2rem);
+    letter-spacing: .32em; margin-right: -.32em; color: #1f1a14; line-height: 1;
+    text-shadow: 0 0 1px rgba(31,26,20,.6), 2px 3px 0 rgba(31,26,20,.08);
+  }
+  /* 낙관(붉은 도장): 作圖 */
+  .seal {
+    font-family: "Noto Serif KR", "Batang", serif; font-weight: 900; color: #fff7ee; background: var(--seal);
+    writing-mode: vertical-rl; font-size: clamp(1.5rem, 3.2vw, 2.2rem); line-height: 1.05; padding: 10px 7px; border-radius: 5px;
+    box-shadow: inset 0 0 0 3px var(--seal), inset 0 0 0 5px #fff1e6; transform: rotate(4deg); opacity: .92;
+    filter: url(#sealRough);
+  }
+  .hero .sub { font-family: var(--serif); font-size: 1.25rem; color: #3b3022; margin: 12px 0 6px; font-weight: 600; }
+  .hero p { color: #6b5b42; }
+  /* 표지 글씨: 옛 활자 느낌 */
+  .cover, .cover h2, .cover .badge, .cover .hero .sub, .cover .records h3, .cover-foot { font-family: "Song Myung", var(--serif); }
+  .cover .mode-card p, .cover .hero p, .cover .records { font-family: "Song Myung", var(--serif); letter-spacing: .02em; }
+  .cover .mode-card h2 { font-weight: 400; font-size: 1.45rem; letter-spacing: .04em; }
+  .cover .mode-card .num { font-family: "Song Myung", var(--serif); font-weight: 400; }
+  /* 단계 카드: 걸어 두는 족자 — 위아래 나무 축(끝은 짙은 축머리), 베이지 테두리, 상아색 종이, 가는 안쪽 선과 모서리 뇌문 */
+  .cover-body .mode-grid { gap: 46px 44px; padding: 14px 20px; }
+  .mode-card {
+    overflow: visible; border-radius: 0; margin: 0; padding: 24px 28px 22px;
+    background-color: #f8f3ec; border: 8px solid #dcc6b0; border-top-width: 6px; border-bottom-width: 6px;
+    outline: 1px solid #d3bca4; outline-offset: -14px;
+    background-image: var(--fret-tl), var(--fret-tr), var(--fret-bl), var(--fret-br);
+    background-repeat: no-repeat; background-size: 16px 16px;
+    background-position: left 8px top 8px, right 8px top 8px, left 8px bottom 8px, right 8px bottom 8px;
+    box-shadow: 0 6px 14px rgba(90,60,30,.12);
+  }
+  .mode-card::before, .mode-card::after {                   /* 나무 축: 양 끝에 짙은 갈색 축머리 */
+    content: ""; position: absolute; left: -24px; right: -24px; height: 11px; width: auto; border-radius: 0; opacity: 1;
+    background:
+      radial-gradient(ellipse 6px 5px at 6px 50%, #4b2c18 96%, transparent),
+      radial-gradient(ellipse 6px 5px at calc(100% - 6px) 50%, #4b2c18 96%, transparent),
+      linear-gradient(180deg, #bf9a82 0%, #a9826a 45%, #8f6a53 100%) center / calc(100% - 22px) 100% no-repeat;
+    filter: drop-shadow(0 2px 2px rgba(70,40,20,.25));
+  }
+  .mode-card::before { top: -16px; bottom: auto; }
+  .mode-card::after { bottom: -16px; top: auto; }
+  .mode-card .ic { position: relative; }
+  /* 맞힌 개수: 아이콘 위에 걸쳐서 (설명 글씨를 가리지 않게) */
+  .mode-card .ic .done { position: absolute; left: 50%; top: -11px; right: auto; transform: translateX(-50%); white-space: nowrap; background: #8a6a52; font-size: .7rem; padding: 1px 7px; }
+  .mode-card .ic { background: transparent; border: 1px solid #e0cdb8; }
+  .mode-card .num { color: color-mix(in srgb, var(--c) 70%, #6b5444); }
+  .mode-card h2 { color: #3d2f24; }
+  .mode-card p { color: #7a6655; }
+  /* 오른쪽 위 매듭 장식(술) */
+  .mode-card .tassel { position: absolute; right: -22px; top: -8px; width: 12px; height: 56px; pointer-events: none; }
+  .mode-card:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(90,60,30,.18); }
+  .mode-card .ic { border-radius: 4px; background: color-mix(in srgb, var(--cbg) 70%, #f6ecd2); border: 1px solid rgba(90,74,50,.15); }
+  .mode-card .num { font-family: var(--serif); letter-spacing: .12em; }
+  .mode-card h2 { font-family: var(--serif); font-weight: 900; }
+  .mode-card:hover { transform: translateY(-2px); box-shadow: 0 2px 4px rgba(80,55,20,.1), 0 14px 28px rgba(80,55,20,.16); }
+  .mode-card.challenge {
+    background-color: #f7efe0; background-image: var(--fret-tl), var(--fret-tr), var(--fret-bl), var(--fret-br);
+    background-repeat: no-repeat; background-size: 16px 16px;
+    background-position: left 8px top 8px, right 8px top 8px, left 8px bottom 8px, right 8px bottom 8px;
+  }
+  .cover .mode-card { gap: 12px; padding: 22px 20px 20px; }
+  .cover .mode-card .ic { width: 64px; height: 64px; }
+  .cover .mode-card .ic svg { width: 50px; height: 50px; }
+  .cover .mode-card p { font-size: .88rem; }
+  .records { border-radius: 4px; }
+  .records::before { background: var(--seal); height: 4px; }
+  .records h3 { font-family: var(--serif); }
+  .records tr.best td { background: rgba(233,185,73,.22); }
+  .rec-tab { background: #fdf8ea; border-color: #d8c7a0; border-radius: 4px; }
+  .rec-tab:not(.on) { background: #fdf8ea; }
+  .cover-foot { color: #6b5b42; font-family: var(--serif); }
+  .deco { opacity: .8; }
+  /* 잠금과 코드 입력 */
+  .side { display: flex; flex-direction: column; gap: 14px; }
+  .codebox { background: #f8f3ec; border: 1px solid #d8c7a0; border-radius: 4px; padding: 14px 16px; box-shadow: var(--shadow); }
+  .codebox h3 { margin: 0 0 10px; font-size: 1.05rem; }
+  .code-row { display: flex; gap: 8px; }
+  .code-row input { flex: 1; min-width: 0; font: inherit; font-size: 1.1rem; letter-spacing: .2em; padding: 8px 10px; border: 1px solid #cdb98d; border-radius: 4px; background: #fffdf7; }
+  .code-row button { background: #2a2118; min-height: 40px; }
+  .code-msg { margin-top: 8px; font-size: .92rem; line-height: 1.6; color: #5a4a32; min-height: 1.2em; }
+  .code-msg.bad { color: var(--bad); }
+  .code-msg.ok { color: var(--ok); font-weight: 700; }
+  .code-msg table { border-collapse: collapse; margin-top: 4px; width: 100%; }
+  .code-msg td { padding: 3px 6px; border-bottom: 1px dashed #d8c7a0; }
+  .code-msg td:first-child { font-weight: 800; letter-spacing: .1em; width: 60px; }
+  .mode-card.locked { cursor: not-allowed; }
+  .mode-card.locked > span:not(.lock-badge), .mode-card.locked .tassel { opacity: .38; filter: grayscale(.8); }
+  .mode-card .lock-badge {
+    position: absolute; inset: 0; display: grid; place-items: center; z-index: 2;
+    font-size: 1rem; color: #3d2f24; background: rgba(248,243,236,.35);
+  }
+  .mode-card .lock-badge b { background: rgba(255,251,242,.95); border: 1px solid #c9ad92; border-radius: 3px; padding: 4px 12px; box-shadow: 0 2px 6px rgba(80,55,20,.15); }
+  .tabs button.locked { opacity: .45; cursor: not-allowed; }
+  .mode-card .lock-badge small { display: block; margin-top: 6px; font-size: .78rem; font-family: "Pretendard", "Malgun Gothic", sans-serif; color: #6b5444; text-align: center; line-height: 1.5; }
+  .mode-card .lock-badge > span { display: flex; flex-direction: column; align-items: center; background: rgba(255,251,242,.95); border: 1px solid #c9ad92; border-radius: 3px; padding: 6px 12px; box-shadow: 0 2px 6px rgba(80,55,20,.15); }
+
+  /* 모드 고르기 (연습 / 실전) */
+  .play-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 46px 44px; padding: 14px 20px; max-width: 860px; margin: 0 auto; }
+  .play-grid .mode-card { flex-direction: column; align-items: flex-start; padding: 28px 28px 24px; }
+  .play-grid .mode-card .ic { width: 84px; height: 84px; }
+  .play-grid .mode-card .ic svg { width: 64px; height: 64px; }
+  .play-grid .mode-card h2 { font-size: 1.9rem; }
+  .play-grid .mode-card p { font-size: 1rem; line-height: 1.6; }
+  .play-grid .mode-card ul { margin: 6px 0 0; padding-left: 18px; color: #7a6655; font-size: .92rem; line-height: 1.7; }
+  .playbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: -14px 0 18px; flex-wrap: wrap; }
+  .play-pill { font-family: var(--serif); font-weight: 900; color: #fff; background: var(--seal); border-radius: 3px; padding: 5px 14px; letter-spacing: .08em; }
+  .play-pill.practice { background: #2f6fd6; }
+  /* 연습 모드 안내: 지금 고를 도구를 주황색으로 반짝 */
+  .tool.need { box-shadow: 0 0 0 3px #ff8a1d, 0 0 14px rgba(255,138,29,.6); animation: needGlow .9s ease-in-out infinite alternate; }
+  @keyframes needGlow { from { box-shadow: 0 0 0 2px #ff8a1d, 0 0 4px rgba(255,138,29,.3); } to { box-shadow: 0 0 0 4px #ff8a1d, 0 0 16px rgba(255,138,29,.7); } }
+  .hint-now.guide { background: #fff4e6; border-left-color: #ff8a1d; }
+  .hint-now.guide b { color: #d96a00; }
+  .hint-now .press { display: block; margin-top: 6px; font-weight: 800; color: #d96a00; }
+  .guide-list { margin: 10px 0 0; padding: 0; list-style: none; font-size: .88rem; line-height: 1.5; }
+  .guide-list li { display: flex; gap: 6px; padding: 3px 4px; border-radius: 4px; color: #b3aa9a; }   /* 지금 차례가 아닌 단계는 회색 */
+  .guide-list li.now { background: rgba(255,138,29,.14); color: #3b3022; font-weight: 800; }
+  /* 잠금 해제 알림 창 */
+  .umodal { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; background: rgba(42,33,24,.45); padding: 16px; }
+  .umodal-box {
+    width: min(460px, 100%); text-align: center; padding: 30px 26px 24px; border-radius: 4px;
+    background: #fcf8ee; border: 2px solid rgba(184,50,42,.55); outline: 1px solid rgba(184,50,42,.35); outline-offset: -9px;
+    box-shadow: 0 18px 40px rgba(70,45,15,.3); animation: uPop .4s cubic-bezier(.2,1.5,.4,1);
+  }
+  @keyframes uPop { from { transform: scale(.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .umodal-box .big { font-size: 3rem; }
+  .umodal-box h2 { font-family: var(--serif); margin: 6px 0 10px; color: #3d2f24; }
+  .umodal-box p { font-size: 1.05rem; line-height: 1.7; color: #3b3022; margin: 0 0 20px; }
+  .umodal-box p b { color: var(--seal); }
+  .umodal-box .btns { display: flex; gap: 10px; justify-content: center; }
+  .umodal-box .btns button { min-width: 120px; }
+  /* 설정 창 */
+  .set-box { position: relative; text-align: left; }
+  .set-box h2 { text-align: center; margin-top: 0; }
+  .set-x { position: absolute; right: 14px; top: 14px; min-height: 0; width: 36px; height: 36px; padding: 0; background: #efe6d8; color: #6b5a40; }
+  .set-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 4px; border-bottom: 1px dashed #d8c7a0; font-size: 1.05rem; font-weight: 700; color: #3b3022; }
+  .set-box .codebox { margin-top: 16px; box-shadow: none; }
+  .sw { min-width: 92px; min-height: 38px; border-radius: 999px; background: #d8cfc0; color: #5a4a32; font-weight: 800; }
+  .sw.on { background: var(--ok); color: #fff; }
+  .no-side .cover-body { grid-template-columns: 1fr; }
+  .no-side .side { display: none; }
+  @media (max-width: 760px) { .play-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 760px) { .cover { padding: 12px 0; } .cover-in.doc { margin: auto 12px; width: calc(100% - 24px); padding: 30px 18px; } .title-row { gap: 14px; } }
+
+  @media (max-width: 860px), (orientation: portrait) {
+    body { height: auto; overflow: auto; }
+    .cover { overflow-y: visible; }
+    .mode-grid { grid-template-columns: 1fr 1fr; }
+    .cover-body { grid-template-columns: 1fr; }
+    main { flex-direction: column; }
+    .canvas-wrap { flex: none; height: 62vw; min-height: 340px; }
+    aside { width: auto; overflow: visible; }
+  }
+  @media (max-width: 560px) { .mode-grid, .cover-body .mode-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- ───────── 모드 고르기 (맨 처음 화면) ───────── -->
+<div class="cover" id="start">
+  <button class="gear" data-settings aria-label="설정" title="설정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+  <div class="cover-in doc">
+    <div class="hero">
+      <span class="badge">중학교 1학년 · 기본 도형의 작도</span>
+      <div class="title-row"><h1>작도</h1><span class="seal">作圖</span></div>
+      <p class="sub">어떤 모드로 할까요?</p>
+    </div>
+    <div class="play-grid">
+      <button class="mode-card" data-play="practice" style="--c:#2f6fd6;--cbg:#e9f1ff">
+        <span class="ic"><svg viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10 50 L14 38 L40 12 L48 20 L22 46 Z"/><path d="M36 16 L44 24"/><path d="M10 50 L22 46"/></svg></span>
+        <span>
+          <span class="num">PRACTICE</span>
+          <h2>연습 모드</h2>
+          <p>작도하는 방법을 처음부터 끝까지 알려 줘요.</p>
+          <ul><li>지금 할 일을 <b style="color:#d96a00">주황색</b>으로 보여 줘요</li><li>어떤 도구를 고르고 어디를 누를지 설명해 줘요</li></ul>
+        </span>
+      </button>
+      <button class="mode-card" data-play="real" style="--c:#b8322a;--cbg:#fdece6">
+        <span class="ic"><svg viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="30" cy="30" r="20"/><circle cx="30" cy="30" r="11"/><circle cx="30" cy="30" r="3" fill="currentColor"/><path d="M30 4 V14 M30 46 V56 M4 30 H14 M46 30 H56"/></svg></span>
+        <span>
+          <span class="num">REAL</span>
+          <h2>실전 모드</h2>
+          <p>스스로 작도하고 채점해요.</p>
+          <ul><li>힌트는 문제마다 2번까지</li><li>문제를 2번씩 맞히면 다음 단계가 열려요</li></ul>
+        </span>
+      </button>
+    </div>
+    <p class="cover-foot">도구는 <b>눈금 없는 자</b>와 <b>컴퍼스</b>뿐이에요. 길이와 각은 컴퍼스로 재서 옮겨요.</p>
+  </div>
+</div>
+
+<!-- ───────── 잠금 해제 알림 ───────── -->
+<div class="umodal hidden" id="unlockModal">
+  <div class="umodal-box">
+    <div class="big">🔓</div>
+    <h2>잠금 해제!</h2>
+    <p id="unlockMsg"></p>
+    <div class="btns"><button class="ghost" id="uHome">처음으로</button><button id="uAgain">다시 하기</button></div>
+  </div>
+</div>
+
+<!-- ───────── 설정 ───────── -->
+<div class="umodal hidden" id="settings">
+  <div class="umodal-box set-box">
+    <button class="set-x" id="setClose" aria-label="닫기">✕</button>
+    <h2>⚙️ 설정</h2>
+    <div class="set-row"><span>🔊 효과음</span><button class="sw" id="sndBtn"></button></div>
+    <div class="set-row"><span>⛶ 전체 화면</span><button class="sw" id="fsBtn"></button></div>
+    <div class="codebox">
+      <h3>🔑 코드 입력</h3>
+      <div class="code-row">
+        <input id="codeIn" inputmode="numeric" maxlength="8" autocomplete="off" spellcheck="false" placeholder="숫자 코드">
+        <button id="codeGo">확인</button>
+      </div>
+      <div class="code-msg" id="codeMsg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ───────── 표지 ───────── -->
+<div class="cover hidden" id="cover">
+  <button class="gear" data-settings aria-label="설정" title="설정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+  <!-- 도장 테두리를 살짝 거칠게 -->
+  <svg width="0" height="0" style="position:absolute"><filter id="sealRough"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="2.4"/></filter></svg>
+  <!-- 먹으로 그린 듯한 컴퍼스 원과 삼각형 -->
+  <svg class="deco d1" viewBox="0 0 400 400" fill="none" stroke="#2a2118" stroke-opacity=".12" stroke-width="2.5" stroke-linecap="round">
+    <circle cx="200" cy="200" r="150"/><path d="M200 200 L350 200"/><path d="M80 290 A150 150 0 0 1 60 140" stroke-width="5" stroke="#b8322a" stroke-opacity=".22"/>
+    <circle cx="200" cy="200" r="5" fill="#2a2118" fill-opacity=".2"/>
+  </svg>
+  <svg class="deco d2" viewBox="0 0 400 400" fill="none" stroke="#2a2118" stroke-opacity=".11" stroke-width="2.5" stroke-linecap="round">
+    <path d="M60 320 L340 320 L170 80 Z"/><path d="M110 320 A50 50 0 0 0 92 284"/><path d="M300 320 A40 40 0 0 1 318 288"/>
+  </svg>
+  <div class="cover-in doc">
+    <div class="hero">
+      <span class="badge">중학교 1학년 · 기본 도형의 작도</span>
+      <div class="title-row"><h1>작도</h1><span class="seal">作圖</span></div>
+      <p class="sub">눈금 없는 자와 컴퍼스로 작도 연습하기</p>
+    </div>
+    <div class="playbar"><span class="play-pill" id="playPill"></span><button class="ghost" id="toStart">← 모드 바꾸기</button></div>
+    <div class="cover-body">
+      <div class="mode-grid" id="modeGrid"></div>
+      <div class="side">
+        <aside class="records" id="records"></aside>
+      </div>
+    </div>
+    <p class="cover-foot">도구는 <b>눈금 없는 자</b>와 <b>컴퍼스</b>뿐이에요. 길이와 각은 컴퍼스로 재서 옮겨요.</p>
+  </div>
+</div>
+
+<!-- ───────── 작도 화면 ───────── -->
+<div id="app" class="hidden">
+<header>
+  <button class="home" id="home">← 처음으로</button>
+  <div class="brand">
+    <svg viewBox="0 0 32 32" fill="none" stroke="#2a2118" stroke-width="2.2" stroke-linecap="round"><circle cx="16" cy="6" r="2.6"/><path d="M14.6 8.4 8 28M17.4 8.4 24 28M10.5 21h11"/></svg>
+    작 도 <span class="hj">作圖</span>
+  </div>
+  <div class="tabs" id="tabs"></div>
+  <button class="gear" data-settings aria-label="설정" title="설정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+</header>
+
+<main>
+  <section class="stage">
+    <div class="task"><div class="q"><i id="taskTag">문제</i><span id="task"></span></div><div class="variants" id="variants"></div><span class="timer hidden" id="timer">⏱ 00:00.0</span></div>
+    <div class="toolbar" id="toolbar">
+      <button class="tool" data-tool="point">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>점</button>
+      <button class="tool" data-tool="segment">
+        <svg viewBox="0 0 24 24"><line x1="4" y1="18" x2="20" y2="6" stroke="currentColor" stroke-width="2"/><circle cx="4" cy="18" r="2.5" fill="currentColor"/><circle cx="20" cy="6" r="2.5" fill="currentColor"/></svg>선분</button>
+      <button class="tool" data-tool="ray">
+        <svg viewBox="0 0 24 24"><line x1="4" y1="18" x2="23" y2="4" stroke="currentColor" stroke-width="2"/><circle cx="4" cy="18" r="2.5" fill="currentColor"/></svg>반직선</button>
+      <button class="tool" data-tool="line">
+        <svg viewBox="0 0 24 24"><line x1="1" y1="20" x2="23" y2="4" stroke="currentColor" stroke-width="2"/></svg>직선</button>
+      <button class="tool" data-tool="compass">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="4" r="2"/><path d="M11 6 6 21M13 6l5 15M8 15h8"/></svg>컴퍼스</button>
+      <button class="tool" data-tool="eraser">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M15 4l6 6-9 9H6l-3-3z"/><path d="M9 10l6 6M6 19h14"/></svg>지우개</button>
+      <div class="right">
+        <button class="ghost" id="undo">↶ 되돌리기</button>
+        <button class="ghost" id="clear">모두 지우기</button>
+      </div>
+    </div>
+    <div class="canvas-wrap" id="wrap"><canvas id="cv"></canvas></div>
+    <div class="status" id="status"></div>
+  </section>
+
+  <aside>
+    <div class="actions">
+      <button class="hintbtn" id="hint">💡 힌트</button>
+      <button class="ghost" id="newProb">↻ 새 문제</button>
+      <button class="check" id="check">채점하기</button>
+    </div>
+    <div class="card hidden" id="resultCard">
+      <h3>정확도</h3>
+      <div class="score" id="score"></div>
+      <div class="meter" id="meter"><i></i></div>
+      <ul class="fb" id="feedback"></ul>
+      <button class="retry hidden" id="retry">↻ 새 문제</button>
+    </div>
+    <div class="card hints">
+      <h3 id="hintTitle">💡 힌트</h3>
+      <div id="hintBox"></div>
+    </div>
+    <div class="card legend">
+      <span class="dot inter"></span>선과 호가 만나서 생긴 점(교점)<br>
+      <span class="dot free"></span>직접 찍은 점<br>
+      컴퍼스: <b>두 점으로 너비 재기</b> → <b>중심 누르기</b> → <b>호 그릴 곳 누르기</b> (1초 꾹 누르면 그 자리부터 손가락을 따라 호가 늘어나요)
+    </div>
+  </aside>
+</main>
+</div>
+
+<script>
+// 한지 섬유 무늬: 가늘고 구불구불한 실오라기와 작은 티를 흩뿌린 그림을 배경 무늬로 씀
+(function hanjiFibers() {
+  return;                                                     // 지금은 잔주름 없는 종이를 씀 (다시 쓰려면 이 줄을 지우면 됨)
+  const N = 520, c = document.createElement('canvas'); c.width = c.height = N;
+  const g = c.getContext('2d'), R = Math.random;
+  g.lineCap = 'round';
+  for (let i = 0; i < 230; i++) {
+    const light = R() < .55, len = 18 + R() ** 2 * 110, a0 = (R() - .5) * 1.2 + (R() < .5 ? 0 : Math.PI / 2) * .35;
+    let x = R() * N, y = R() * N, a = a0;
+    g.strokeStyle = light ? `rgba(255,253,245,${.35 + R() * .4})` : `rgba(120,92,50,${.07 + R() * .12})`;
+    g.lineWidth = .5 + R() * (light ? 1.3 : .8);
+    g.beginPath(); g.moveTo(x, y);
+    for (let s = 0; s < len; s += 4) { a += (R() - .5) * .5; x += Math.cos(a) * 4; y += Math.sin(a) * 4; g.lineTo(x, y); }
+    g.stroke();
+  }
+  for (let i = 0; i < 90; i++) {                              // 작은 티
+    g.fillStyle = `rgba(110,80,40,${.06 + R() * .14})`;
+    g.beginPath(); g.ellipse(R() * N, R() * N, .6 + R() * 1.6, .4 + R(), R() * 3, 0, 7); g.fill();
+  }
+  document.documentElement.style.setProperty('--fiber', `url(${c.toDataURL()})`);
+})();
+// ───────── 기본 설정 ─────────
+let W = 1000;              // 세계 좌표 폭 (화면이 넓으면 오른쪽으로 늘어남)
+const H = 517;             // 세계 좌표 높이 (작을수록 화면에 크게 보임: 620에서 20% 확대)
+const GX = 333;            // 왼쪽 "주어진 조건" 영역의 폭
+const CM = 40;             // 1cm = 40단위
+const EPS = 0.5;           // 점이 선/호 위에 있는지 판단하는 허용치
+const TAU = Math.PI * 2;
+const ARC_MIN = TAU / 24 * 1.3 * 0.9 * 0.95;  // 톡 누르면 생기는 짧은 호 (약 16.7°, 주어진 조건 칸은 그 1.2배)
+const HOLD_MS = 1000;      // 이만큼 꾹 누르면 호를 길게 늘이는 모드
+const HINT_MAX = 2;        // 실전 모드에서 문제 하나에 쓸 수 있는 힌트 수 (연습 모드는 계속 안내)
+
+const MODES = [
+  { id: 'seg',   name: '선분', title: '선분 작도', desc: '길이가 같은 선분 · 2배인 선분', c: '#2f6fd6', cbg: '#e9f1ff',
+    icon: '<path d="M8 40 L52 40" stroke-width="3"/><circle cx="8" cy="40" r="3.5" fill="currentColor"/><circle cx="52" cy="40" r="3.5" fill="currentColor"/><path d="M47 28 A24 24 0 0 1 56 33" stroke-width="2.5" stroke-dasharray="0"/><path d="M8 40 L22 18 L36 40" stroke-width="2" stroke-dasharray="3 3" opacity=".6"/>' },
+  { id: 'angle', name: '각', title: '각 작도', desc: '크기가 같은 각 · 예각과 둔각', c: '#11998e', cbg: '#e3f6f3',
+    icon: '<path d="M10 46 L54 46" stroke-width="3"/><path d="M10 46 L40 14" stroke-width="3"/><path d="M26 46 A16 16 0 0 0 21 34" stroke-width="2.5"/><circle cx="10" cy="46" r="3.5" fill="currentColor"/>' },
+  { id: 'sss',   name: 'SSS', title: 'SSS 합동', desc: '세 변의 길이가 주어질 때', c: '#e4572e', cbg: '#fdece6',
+    icon: '<path d="M8 48 L52 48 L24 12 Z" stroke-width="3" stroke-linejoin="round"/><path d="M28 44 v8M14 28 l6 4M40 28 l-6 4M37 26 l-6 4" stroke-width="2.5"/>' },
+  { id: 'sas',   name: 'SAS', title: 'SAS 합동', desc: '두 변의 길이와 그 끼인각', c: '#7b4bd1', cbg: '#f1eafd',
+    icon: '<path d="M8 48 L52 48 L24 12 Z" stroke-width="3" stroke-linejoin="round"/><path d="M28 44 v8M14 28 l6 4" stroke-width="2.5"/><path d="M20 48 A12 12 0 0 0 15 37" stroke-width="2.5"/>' },
+  { id: 'asa',   name: 'ASA', title: 'ASA 합동', desc: '한 변의 길이와 그 양 끝 각', c: '#2a9d6f', cbg: '#e4f5ee',
+    icon: '<path d="M8 48 L52 48 L24 12 Z" stroke-width="3" stroke-linejoin="round"/><path d="M28 44 v8" stroke-width="2.5"/><path d="M18 48 A10 10 0 0 0 14 40" stroke-width="2.5"/><path d="M42 48 A10 10 0 0 1 45 40" stroke-width="2.5"/><path d="M38 48 A14 14 0 0 1 43 37" stroke-width="2.5"/>' },
+  { id: 'challenge', name: '도전', title: '도전!', desc: 'SSS · SAS · ASA 중 무작위', c: '#d48a00', cbg: '#fff2d6',
+    icon: '<path d="M30 8 l6.5 13.5 14.5 2 -10.5 10 2.6 14.5 -13.1 -7 -13.1 7 2.6 -14.5 -10.5 -10 14.5 -2 Z" stroke-width="3" stroke-linejoin="round" fill="currentColor" fill-opacity=".15"/>' },
+];
+
+let mode = 'seg';
+let variant = 0;          // 모드 안의 문제 번호 (0, 1)
+let prob = null;          // 현재 문제
+let S = null;             // 작도 상태 { points, objs, nextId, labelIdx }
+let history = [];
+let tool = 'segment';
+// 학생이 그린 선·호의 색: 호 주황, 선분 초록, 반직선 하늘, 직선 노랑
+const DRAW_COL = { compass: '#ff8a1d', segment: '#1fa45a', ray: '#2aa7e6', line: '#e8b400' };
+let pending = [];         // 선분/반직선/직선 도구에서 고른 점
+let compass = { stage: 0, a: null, b: null, r: 0, c: null, sweep: null };
+let cursor = null;        // 현재 손가락/펜 위치(스냅 결과)
+let pointerDown = false;
+let highlight = null;     // 채점 후 강조할 도형
+let hintView = null;      // 힌트로 보여 줄 것 { step } 또는 { wrong }
+let hintsUsed = 0;        // 이 문제에서 쓴 힌트 수
+let solved = {};          // 모드별 맞힌 문제 수
+let solvedThis = false;
+let interCache = null;
+
+// ───────── 수학 도우미 ─────────
+const rad = d => d * Math.PI / 180;
+const deg = r => r * 180 / Math.PI;
+const dir = d => [Math.cos(rad(d)), -Math.sin(rad(d))];      // 화면은 y가 아래로
+const dist = (p, q) => Math.hypot(p.x - q.x, p.y - q.y);
+const rnd1 = (a, b) => Math.round((a + Math.random() * (b - a)) * 10) / 10;
+const randint = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const mod = (a, m) => ((a % m) + m) % m;
+const isArc = o => o.type === 'arc';
+function angleBetween(ux, uy, vx, vy) {
+  const c = (ux * vx + uy * vy) / (Math.hypot(ux, uy) * Math.hypot(vx, vy));
+  return deg(Math.acos(clamp(c, -1, 1)));
+}
+function tRange(o) {
+  if (o.type === 'segment') return [0, 1];
+  if (o.type === 'ray') return [0, Infinity];
+  return [-Infinity, Infinity];
+}
+function inRange(o, t) { const [a, b] = tRange(o); return t >= a - 1e-7 && t <= b + 1e-7; }
+// 호: 중심 (cx, cy), 반지름 r, 시작각 s부터 d만큼(화면 각, 시계 방향)
+function inArc(o, p, tol = 1e-6) {
+  const t = mod(Math.atan2(p.y - o.cy, p.x - o.cx) - o.s, TAU);
+  return t <= o.d + tol || t >= TAU - tol;
+}
+
+function intersect(o1, o2) {
+  const a1 = isArc(o1), a2 = isArc(o2);
+  if (!a1 && !a2) return interSS(o1, o2);
+  if (!a1 && a2) return interSC(o1, o2);
+  if (a1 && !a2) return interSC(o2, o1);
+  return interCC(o1, o2);
+}
+function interSS(a, b) {
+  const d1x = a.bx - a.ax, d1y = a.by - a.ay, d2x = b.bx - b.ax, d2y = b.by - b.ay;
+  const den = d1x * d2y - d1y * d2x;
+  if (Math.abs(den) < 1e-9) return [];
+  const ex = b.ax - a.ax, ey = b.ay - a.ay;
+  const t = (ex * d2y - ey * d2x) / den;
+  const u = (ex * d1y - ey * d1x) / den;
+  if (!inRange(a, t) || !inRange(b, u)) return [];
+  return [{ x: a.ax + t * d1x, y: a.ay + t * d1y }];
+}
+function interSC(s, c) {
+  const dx = s.bx - s.ax, dy = s.by - s.ay, fx = s.ax - c.cx, fy = s.ay - c.cy;
+  const A = dx * dx + dy * dy, B = 2 * (fx * dx + fy * dy), C = fx * fx + fy * fy - c.r * c.r;
+  const disc = B * B - 4 * A * C;
+  if (disc < 0) return [];
+  const sq = Math.sqrt(disc), out = [];
+  for (const t of disc === 0 ? [-B / (2 * A)] : [(-B - sq) / (2 * A), (-B + sq) / (2 * A)]) {
+    const p = { x: s.ax + t * dx, y: s.ay + t * dy };
+    if (inRange(s, t) && inArc(c, p)) out.push(p);
+  }
+  return out;
+}
+function interCC(c1, c2) {
+  const d = Math.hypot(c2.cx - c1.cx, c2.cy - c1.cy);
+  if (d < 1e-9 || d > c1.r + c2.r || d < Math.abs(c1.r - c2.r)) return [];
+  const a = (c1.r * c1.r - c2.r * c2.r + d * d) / (2 * d);
+  const h = Math.sqrt(Math.max(0, c1.r * c1.r - a * a));
+  const mx = c1.cx + a * (c2.cx - c1.cx) / d, my = c1.cy + a * (c2.cy - c1.cy) / d;
+  const ox = -(c2.cy - c1.cy) / d * h, oy = (c2.cx - c1.cx) / d * h;
+  const ps = h < 1e-9 ? [{ x: mx, y: my }] : [{ x: mx + ox, y: my + oy }, { x: mx - ox, y: my - oy }];
+  return ps.filter(p => inArc(c1, p) && inArc(c2, p));
+}
+// 도형은 자기가 그려진 칸(주어진 조건 / 작도하는 곳) 안에서만 보이고, 교점도 그 안에서만 생긴다
+const zoneAt = p => (p.x < GX ? 'given' : 'work');
+const zoneOf = o => zoneAt(isArc(o) ? { x: o.cx } : { x: o.ax });
+function allIntersections() {
+  if (interCache) return interCache;
+  const out = [], o = S.objs;
+  for (let i = 0; i < o.length; i++)
+    for (let j = i + 1; j < o.length; j++)
+      for (const p of intersect(o[i], o[j]))
+        if (p.x >= 0 && p.x <= W && p.y >= 0 && p.y <= H && zoneAt(p) === zoneOf(o[i]) && zoneAt(p) === zoneOf(o[j])) out.push(p);
+  return (interCache = out);
+}
+function onObj(o, p) {
+  if (isArc(o)) return Math.abs(Math.hypot(p.x - o.cx, p.y - o.cy) - o.r) < EPS && inArc(o, p, EPS / o.r);
+  const dx = o.bx - o.ax, dy = o.by - o.ay, L2 = dx * dx + dy * dy;
+  const t = ((p.x - o.ax) * dx + (p.y - o.ay) * dy) / L2;
+  const tol = EPS / Math.sqrt(L2);
+  const [a, b] = tRange(o);
+  if (t < a - tol || t > b + tol) return false;
+  return Math.abs((p.x - o.ax) * dy - (p.y - o.ay) * dx) / Math.sqrt(L2) < EPS;
+}
+function project(o, x, y) {
+  if (isArc(o)) {
+    let ang = Math.atan2(y - o.cy, x - o.cx);
+    if (!inArc(o, { x, y })) {        // 호 밖이면 가까운 끝점으로
+      const t = mod(ang - o.s, TAU);
+      ang = t - o.d < TAU - t ? o.s + o.d : o.s;
+    }
+    return { x: o.cx + Math.cos(ang) * o.r, y: o.cy + Math.sin(ang) * o.r };
+  }
+  const dx = o.bx - o.ax, dy = o.by - o.ay;
+  let t = ((x - o.ax) * dx + (y - o.ay) * dy) / (dx * dx + dy * dy);
+  const [a, b] = tRange(o);
+  t = clamp(t, a, b);
+  return { x: o.ax + t * dx, y: o.ay + t * dy };
+}
+
+// ───────── 상태 ─────────
+const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const SUB = '₀₁₂₃₄₅₆₇₈₉';
+function nextLabel() {
+  for (;;) {
+    const k = S.labelIdx++, base = LETTERS[k % 26], n = Math.floor(k / 26);
+    if (n === 0 && prob.reserved.includes(base)) continue;
+    return n ? base + String(n).split('').map(c => SUB[c]).join('') : base;
+  }
+}
+function addPoint(x, y, kind, label, lo) {
+  const p = { id: S.nextId++, x, y, kind, zone: x < GX ? 'given' : 'work',
+              label: label === undefined ? nextLabel() : label };
+  if (lo) p.lo = lo;                    // 글자 위치(화면 px 오프셋)
+  S.points.push(p); return p;
+}
+function addStraight(type, p, q, given = false) {
+  const o = { id: S.nextId++, type, ax: p.x, ay: p.y, bx: q.x, by: q.y, p1: p.id, p2: q.id, given };
+  S.objs.push(o); interCache = null; return o;
+}
+function addArc(c, r, s, d) {
+  const o = { id: S.nextId++, type: 'arc', cx: c.x, cy: c.y, r, s: mod(s, TAU), d: Math.min(d, TAU), c: c.id, given: false };
+  S.objs.push(o); interCache = null; return o;
+}
+const getP = id => S.points.find(p => p.id === id);
+
+// ───────── 문제 만들기 ─────────
+function givenSegment(cx, cy, L, rot, labA, labB, name) {
+  const [ux, uy] = dir(rot);
+  const A = addPoint(cx - ux * L / 2, cy - uy * L / 2, 'given', labA, [-10, -12]);
+  const B = addPoint(cx + ux * L / 2, cy + uy * L / 2, 'given', labB, [10, -12]);
+  addStraight('segment', A, B, true);
+  if (name) prob.texts.push({ x: cx + uy * 20, y: cy - ux * 20, text: name });
+  prob.segs[name || labA + labB] = [A.id, B.id];
+}
+// 한 변은 꼭짓점에서 오른쪽 가로 방향, 다른 변은 위쪽으로 theta만큼 벌어진 각
+function givenAngle(cx, cy, theta, name, labs) {
+  const R = 120;
+  const [ex, ey] = dir(theta);
+  const minX = Math.min(0, ex * R), maxX = R, minY = ey * R, maxY = 0;
+  const ox = cx - (minX + maxX) / 2, oy = cy - (minY + maxY) / 2 + 8;
+  const V = addPoint(ox, oy, 'given', labs ? labs[0] : '', [-6, 16]);
+  const P1 = addPoint(ox + R, oy, 'given', labs ? labs[1] : '', [4, 16]);
+  const P2 = addPoint(ox + ex * R, oy + ey * R, 'given', labs ? labs[2] : '', [ex * 15, ey * 15]);
+  addStraight('segment', V, P1, true);
+  addStraight('segment', V, P2, true);
+  prob.marks.push({ x: ox, y: oy, a1: 0, a2: theta });
+  if (name) prob.texts.push({ x: ox + 6, y: oy + 24, text: name, angle: true });
+}
+// 가장 큰 각이 85° 미만이면 예각삼각형, 95° 초과면 둔각삼각형으로 인정
+function triType(a, b, c, obtuse) {
+  const [p, q, m] = [a, b, c].sort((x, y) => x - y);
+  const big = deg(Math.acos((p * p + q * q - m * m) / (2 * p * q)));
+  return obtuse ? big > 95 : big < 85;
+}
+// 주어진 선분의 최대 길이(cm, 이 값 미만): 주어진 조건 칸 양 끝에서 30px 넘게 떨어지도록
+const SEG_MAX = (GX - 2 * 32) / CM + .05;
+const SEG_LINE_Y = 400;                  // 선분 작도: 작도하는 곳의 직선 높이 (주어진 선분보다 아래)
+const VARIANT_NAMES = { seg: ['같은 길이', '2배 길이'], angle: ['예각', '둔각'],
+  sss: ['예각삼각형', '둔각삼각형'], sas: ['예각삼각형', '둔각삼각형'], asa: ['예각삼각형', '둔각삼각형'] };
+function renderVariants() {
+  const names = VARIANT_NAMES[mode];
+  $('variants').innerHTML = names ? names.map((n, i) =>
+    `<button data-v="${i}" class="${i === variant ? 'on' : ''}">문제 ${i + 1} · ${n}</button>`).join('') : '';
+}
+
+function makeProblem() {
+  S = { points: [], objs: [], nextId: 1, labelIdx: 0 };
+  interCache = null;
+  const kind = mode === 'challenge' ? ['sss', 'sas', 'asa'][randint(0, 2)] : mode;
+  const v = mode === 'challenge' ? randint(0, 1) : variant;   // 0: 예각(같은 길이), 1: 둔각(2배)
+  const obtuse = v === 1;
+  prob = { mode, kind, v, texts: [], marks: [], segs: {}, reserved: [] };
+
+  // 기준 변을 오른쪽 가로로 놓고 꼭짓점을 위로 그렸을 때 작도하는 곳에 들어가는 삼각형만 낸다 (단위 cm)
+  // xs: 시작 꼭짓점(0)을 기준으로 한 나머지 꼭짓점의 x, h: 높이. prob.over: 시작점 왼쪽으로 삐져나가는 길이
+  const fitTri = (xs, h) => {
+    const minX = Math.min(0, ...xs), maxX = Math.max(...xs);
+    prob.over = -minX;
+    return maxX - minX <= 11.75 && h <= 9;
+  };
+
+  if (kind === 'seg') {
+    const double = v === 1;
+    const L = (double ? rnd1(2, 4) : rnd1(3.4, SEG_MAX)) * CM;
+    prob.reserved = ['A', 'B'];
+    givenSegment(GX / 2, 260, L, 0, 'A', 'B', '');
+    prob.double = double;
+    prob.L = L;
+    prob.task = double ? '선분 AB의 길이의 2배인 선분을 작도하시오.' : '선분 AB와 길이가 같은 선분을 작도하시오.';
+  }
+
+  if (kind === 'angle') {
+    const theta = obtuse ? randint(95, 150) : randint(25, 85);
+    prob.reserved = ['X', 'O', 'Y', 'P', 'Q'];
+    givenAngle(GX / 2, 260, theta, '', ['O', 'X', 'Y']);
+    const P = addPoint(GX + 80, 420, 'given', 'P', [-8, 16]);
+    const Q = addPoint(GX + 370, 420, 'given', 'Q', [0, 16]);
+    P.zone = Q.zone = 'work';
+    prob.base = addStraight('ray', P, Q, true);
+    prob.P = P.id; prob.theta = theta;
+    prob.task = '반직선 PQ를 한 변으로 하고 ∠XOY와 크기가 같은 각을 작도하시오.';
+  }
+
+  if (kind === 'sss') {
+    let a, b, c;
+    let Ax;
+    do { a = rnd1(4, SEG_MAX); b = rnd1(4, SEG_MAX); c = rnd1(4, SEG_MAX); Ax = (a * a + c * c - b * b) / (2 * a); }
+    while (a + b < c + 1.35 || a + c < b + 1.35 || b + c < a + 1.35 || Math.max(a, b, c) - Math.min(a, b, c) < 0.55
+           || !triType(a, b, c, obtuse) || !fitTri([a, Ax], Math.sqrt(Math.max(0, c * c - Ax * Ax))));
+    prob.reserved = ['A', 'B', 'C'];
+    givenSegment(GX / 2, 120, a * CM, 0, '', '', 'a');
+    givenSegment(GX / 2, 250, b * CM, 0, '', '', 'b');
+    givenSegment(GX / 2, 380, c * CM, 0, '', '', 'c');
+    prob.t = { a: a * CM, b: b * CM, c: c * CM };
+    prob.task = '세 변의 길이가 a, b, c인 삼각형을 작도하시오.';
+  }
+
+  if (kind === 'sas') {
+    let b, c, A, a;
+    do {
+      b = rnd1(4, SEG_MAX); c = rnd1(4, SEG_MAX); A = obtuse ? randint(95, 130) : randint(35, 85);
+      a = Math.sqrt(b * b + c * c - 2 * b * c * Math.cos(rad(A)));
+    } while (!triType(a, b, c, obtuse) || !fitTri([b, c * Math.cos(rad(A))], c * Math.sin(rad(A))));
+    prob.reserved = ['A', 'B', 'C'];
+    givenSegment(GX / 2, 90, b * CM, 0, '', '', 'b');
+    givenSegment(GX / 2, 200, c * CM, 0, '', '', 'c');
+    givenAngle(GX / 2, 380, A, '∠A');
+    prob.t = { b: b * CM, c: c * CM, A };
+    prob.task = '두 변의 길이가 b, c이고 그 끼인각의 크기가 ∠A인 삼각형을 작도하시오.';
+  }
+
+  if (kind === 'asa') {
+    let a, B, C, b, c;
+    do {
+      a = rnd1(4.7, SEG_MAX);
+      if (obtuse) { B = randint(95, 120); C = randint(25, 50); if (Math.random() < 0.5) [B, C] = [C, B]; }
+      else { B = randint(40, 84); C = randint(40, 84); }
+      const Aa = 180 - B - C;
+      b = a * Math.sin(rad(B)) / Math.sin(rad(Aa)); c = a * Math.sin(rad(C)) / Math.sin(rad(Aa));
+    } while (B + C > 150 || !triType(a, b, c, obtuse) || !fitTri([a, c * Math.cos(rad(B))], c * Math.sin(rad(B))));
+    prob.reserved = ['A', 'B', 'C'];
+    givenSegment(GX / 2, 95, a * CM, 0, '', '', 'a');
+    givenAngle(GX / 2, 225, B, '∠B');
+    givenAngle(GX / 2, 400, C, '∠C');
+    prob.t = { a: a * CM, B, C };
+    prob.task = '한 변의 길이가 a이고 그 양 끝 각의 크기가 ∠B, ∠C인 삼각형을 작도하시오.';
+  }
+
+  if (kind !== 'angle') {                              // 작도하는 곳에 처음부터 주어지는 직선
+    const y = kind === 'seg' ? SEG_LINE_Y : 420;
+    const l = { id: S.nextId++, type: 'line', ax: GX + 40, ay: y, bx: GX + 400, by: y, p1: null, p2: null, given: true };
+    S.objs.push(l); interCache = null;
+    prob.lineId = l.id;
+  }
+  prob.initial = JSON.stringify(S);
+  history = []; pending = []; highlight = null; solvedThis = false; hintsUsed = 0; renderHintBtn();
+  resetCompass();
+  $('taskTag').textContent = play === 'practice' ? '연습' : mode === 'challenge' ? '도전' : '문제';
+  if (mode === 'challenge' && play === 'real') startChallenge(); else { stopTimer(); $('timer').classList.add('hidden'); }   // 기록은 실전 모드에서만
+  $('task').textContent = prob.task;
+  renderVariants(); clearHint(); hideResult(); updateStatus(); draw();
+}
+
+// ───────── 스냅(점 고르기) ─────────
+function snap(x, y, tol) {
+  let best = null, bd = Infinity;
+  for (const p of S.points) {
+    const d = dist(p, { x, y }) * 0.75;               // 기존 점을 조금 더 우선
+    if (d < bd) { bd = d; best = { kind: 'pt', id: p.id, x: p.x, y: p.y }; }
+  }
+  for (const q of allIntersections()) {
+    const d = dist(q, { x, y });
+    if (d < bd && !S.points.some(p => dist(p, q) < 0.3)) { bd = d; best = { kind: 'inter', x: q.x, y: q.y }; }
+  }
+  if (best && bd < tol) return best;
+  let ob = null, od = Infinity;
+  for (const o of S.objs) {
+    const q = project(o, x, y), d = dist(q, { x, y });
+    if (d < od && zoneAt(q) === zoneOf(o)) { od = d; ob = { kind: 'on', x: q.x, y: q.y }; }
+  }
+  if (ob && od < tol * 0.8) return ob;
+  return { kind: 'free', x: clamp(x, 4, W - 4), y: clamp(y, 4, H - 4) };
+}
+function resolve(sn) {
+  if (sn.kind === 'pt') return getP(sn.id);
+  return addPoint(sn.x, sn.y, sn.kind === 'inter' ? 'inter' : sn.kind === 'on' ? 'on' : 'free');
+}
+
+// ───────── 도구 동작 ─────────
+function resetCompass() { compass = { stage: 0, a: null, b: null, r: 0, c: null, sweep: null }; }
+
+function act(sn) {
+  const before = JSON.stringify(S);
+  const p = resolve(sn);
+  let changed = JSON.stringify(S) !== before;
+  let msg = '';
+
+  if (tool === 'segment' || tool === 'ray' || tool === 'line') {
+    if (pending.length && pending[0] === p.id) { pending = []; }
+    else {
+      pending.push(p.id);
+      if (pending.length === 2) {
+        const a = getP(pending[0]), b = getP(pending[1]);
+        const dup = S.objs.some(o => o.type === tool && o.p1 === a.id && o.p2 === b.id);
+        if (!dup) { addStraight(tool, a, b); changed = true; sfx('pencil'); }
+        pending = [];
+      }
+    }
+  } else if (tool === 'compass') {
+    if (compass.stage === 0) { compass.stage = 1; compass.a = p.id; }
+    else if (compass.stage === 1) {
+      const r = dist(getP(compass.a), p);
+      if (r < 2) msg = '두 점이 같아요. 다른 점을 눌러 너비를 정해요.';
+      else { compass.stage = 2; compass.b = p.id; compass.r = r; }
+    } else if (compass.stage === 2) {
+      compass.stage = 3; compass.c = p.id; compass.cNew = changed;
+    }
+  }
+  if (changed && tool === 'point') sfx('pop');                   // 점 찍기: 뿅!
+  if (changed) { history.push(before); highlight = null; clearHint(); }
+  else if (play === 'practice') practiceGuide();               // 컴퍼스로 너비만 쟀을 때도 다음에 누를 곳을 바꿔 보여 줌
+  updateStatus(msg); draw();
+}
+
+// 호 그리기: 톡 누르면 누른 곳에 짧은 호. 1초 꾹 누르면 그 짧은 호는 그대로 두고, 손가락 방향으로 이어서 늘어남
+function arcSpan(sw) {
+  const C = getP(compass.c), inGiven = C && C.x < GX;              // 주어진 조건 칸에서는 짧은 호를 20% 길게
+  const h = ARC_MIN * (inGiven ? 1.2 : 1) / 2, lo = Math.min(-h, sw.min ?? sw.acc), hi = Math.max(h, sw.max ?? sw.acc);
+  return [sw.a0 + lo, Math.min(hi - lo, TAU)];
+}
+function finishArc(sw) {
+  const c = getP(compass.c), [s, d] = arcSpan(sw);
+  if (!c) { compass.sweep = null; return; }
+  history.push(JSON.stringify(S));
+  addArc(c, compass.r, s, d); sfx('pencil');
+  resetCompass(); highlight = null; clearHint();         // 호를 그리면 다음엔 너비부터 다시 잰다
+  updateStatus(); draw();
+}
+
+// ───────── 지우개 ─────────
+function eraserHit(x, y, tol) {
+  let best = null, bd = tol;
+  for (const p of S.points) {
+    if (p.kind === 'given') continue;
+    const d = dist(p, { x, y });
+    if (d < bd) { bd = d; best = { type: 'pt', id: p.id }; }
+  }
+  if (best) return best;
+  bd = tol;
+  for (const o of S.objs) {
+    if (o.given) continue;
+    const q = project(o, x, y);
+    if (zoneAt(q) !== zoneOf(o)) continue;
+    const d = dist(q, { x, y });
+    if (d < bd) { bd = d; best = { type: 'obj', id: o.id }; }
+  }
+  return best;
+}
+function erase(hit) {
+  history.push(JSON.stringify(S)); sfx('pop');
+  if (hit.type === 'pt') S.points = S.points.filter(p => p.id !== hit.id);
+  else S.objs = S.objs.filter(o => o.id !== hit.id);
+  interCache = null; highlight = null; pending = []; clearHint();
+  if ([compass.a, compass.b, compass.c].includes(hit.id)) resetCompass();
+  updateStatus(); draw();
+}
+
+function undo() {
+  if (tool === 'compass' && compass.stage === 3) {          // 중심만 고른 상태면 중심 고르기 취소
+    compass.stage = 2; compass.c = null;
+    if (compass.cNew && history.length) { S = JSON.parse(history.pop()); interCache = null; }
+    updateStatus(); draw(); return;
+  }
+  if (!history.length) return;
+  S = JSON.parse(history.pop()); interCache = null;
+  pending = []; highlight = null; clearHint();
+  if ((compass.a && !getP(compass.a)) || (compass.b && !getP(compass.b))) resetCompass();
+  updateStatus(); draw();
+}
+function clearAll() {
+  if (JSON.stringify(S) === prob.initial) return;
+  history.push(JSON.stringify(S));
+  S = JSON.parse(prob.initial); interCache = null;
+  pending = []; highlight = null; resetCompass();
+  hideResult(); clearHint(); updateStatus(); draw();
+}
+
+function setTool(t) {
+  tool = t; pending = [];
+  if (compass.stage === 3) { compass.stage = 2; compass.c = null; }
+  document.querySelectorAll('.tool').forEach(b => b.classList.toggle('on', b.dataset.tool === t));
+  if (play === 'practice' && prob) practiceGuide();
+  updateStatus(); draw();
+}
+
+function updateStatus(extra) {
+  const L = id => getP(id)?.label || '점';
+  let s = tool ? '' : '위의 도구 중 하나를 골라요. (고른 도구를 한 번 더 누르면 선택이 취소돼요)';
+  if (tool === 'point') s = '원하는 곳을 눌러 점을 찍어요. 선이나 호가 <b>만나는 곳</b> 가까이 누르면 교점에 정확히 찍혀요.';
+  if (tool === 'segment') s = pending.length ? `선분의 다른 끝점을 눌러요. (첫 점: ${L(pending[0])})` : '선분의 한 끝점을 눌러요.';
+  if (tool === 'ray') s = pending.length ? `반직선이 지나갈 점을 눌러요. (시작점: ${L(pending[0])})` : '반직선의 <b>시작점</b>을 눌러요.';
+  if (tool === 'line') s = pending.length ? `직선이 지나갈 두 번째 점을 눌러요. (첫 점: ${L(pending[0])})` : '직선이 지나갈 첫 번째 점을 눌러요.';
+  if (tool === 'eraser') s = '지울 <b>점</b>이나 <b>선</b>, <b>호</b>를 눌러요. 누른 것 하나만 지워져요. (주어진 조건은 지워지지 않아요)';
+  if (tool === 'compass') {
+    const w = compass.a && compass.b ? `너비: ${L(compass.a)}${L(compass.b)}` : '';
+    if (compass.stage === 0) s = '<b>① 너비 재기</b> — 바늘을 놓을 첫 번째 점을 눌러요.';
+    if (compass.stage === 1) s = `<b>① 너비 재기</b> — 연필을 놓을 두 번째 점을 눌러요. (바늘: ${L(compass.a)})`;
+    if (compass.stage === 2) s = `<b>② 바늘 꽂기</b> — 호의 중심이 될 점을 눌러요. (${w})`;
+    if (compass.stage === 3) s = `<b>③ 호 그리기</b> — 회색 점선 원 위에서 호를 그릴 곳을 눌러요. 톡 누르면 짧은 호, <b>1초 꾹 누르면</b> 그 자리부터 손가락을 따라 호가 늘어나요. (중심: ${L(compass.c)})`;
+  }
+  $('status').innerHTML = (extra ? `<b style="color:var(--bad)">${extra}</b> ` : '') + s;
+  $('undo').disabled = !history.length && !(tool === 'compass' && compass.stage === 3);
+}
+
+// ───────── 채점 ─────────
+const workPts = () => S.points.filter(p => p.zone === 'work');
+function adjacency(pts) {
+  const adj = new Map(pts.map(p => [p.id, new Set()]));
+  for (const o of S.objs) {
+    if (isArc(o) || (o.given && zoneOf(o) === 'given')) continue;     // 작도하는 곳에 주어진 선은 변으로 인정
+    const on = pts.filter(p => onObj(o, p));
+    for (let i = 0; i < on.length; i++) for (let j = i + 1; j < on.length; j++) {
+      adj.get(on[i].id).add(on[j].id); adj.get(on[j].id).add(on[i].id);
+    }
+  }
+  return adj;
+}
+function lenAcc(m, t) { const r = Math.abs(m - t) / t; return r < 0.004 ? 100 : Math.max(0, 100 - 400 * r); }
+function angAcc(m, t) { const d = Math.abs(m - t); return d < 0.4 ? 100 : Math.max(0, 100 - 5 * d); }
+function lenText(where, name, m, t) {
+  const r = (m - t) / t;
+  if (Math.abs(r) < 0.004) return { ok: true, text: `${where}의 길이가 ${name}와 같아요.` };
+  return { ok: false, text: `${where}의 길이가 ${name}보다 ${m < t ? '짧아요' : '길어요'}. (약 ${Math.abs(r * 100).toFixed(1)}% 차이)` };
+}
+function angText(where, name, m, t) {
+  const d = m - t;
+  if (Math.abs(d) < 0.4) return { ok: true, text: `${where}의 크기가 ${name}와 같아요.` };
+  return { ok: false, text: `${where}의 크기가 ${name}보다 ${d < 0 ? '작아요' : '커요'}. (약 ${Math.abs(d).toFixed(1)}° 차이)` };
+}
+function blame(pts, items) {
+  const last = pts.reduce((a, b) => (b.id > a.id ? b : a));
+  if (last.kind === 'free')
+    items.push({ tip: true, text: `점 ${last.label}은(는) 눈대중으로 찍은 점이에요. 컴퍼스로 그린 호와 선(또는 호와 호)이 만나는 점을 찍어야 정확해요.` });
+  else if (last.kind === 'on')
+    items.push({ tip: true, text: `점 ${last.label}은(는) 선이나 호 위에 아무렇게나 찍은 점이에요. 두 도형이 만나는 교점을 찍어야 정확해요.` });
+}
+
+function grade() {
+  const kind = prob.kind, pts = workPts(), adj = adjacency(pts), items = [];
+  let score = 0;
+
+  if (kind === 'seg') {
+    const T = prob.double ? 2 * prob.L : prob.L, name = prob.double ? 'AB의 2배' : '선분 AB';
+    let best = null;
+    for (const p of pts) for (const q of pts) {
+      if (p.id >= q.id || !adj.get(p.id).has(q.id)) continue;
+      const d = dist(p, q), acc = lenAcc(d, T);
+      if (!best || acc > best.acc) best = { p, q, d, acc };
+    }
+    if (!best) return showResult(null, [{ text: '작도하는 곳에 자로 그은 선분(또는 직선) 위의 두 점이 필요해요. [선분]이나 [직선] 도구로 선을 그었는지 확인하세요.' }]);
+    score = best.acc;
+    highlight = { type: 'seg', pts: [best.p, best.q] };
+    items.push(lenText(`선분 ${best.p.label}${best.q.label}`, name, best.d, T));
+    if (prob.double && score < 100 && Math.abs(best.d - prob.L) / prob.L < 0.004)
+      items.push({ tip: true, text: '이 선분은 AB와 길이가 같아요. 컴퍼스로 AB의 길이를 한 번 더 옮겨 2배로 늘려 보세요.' });
+    if (score < 100) blame([best.p, best.q], items);
+  }
+
+  if (kind === 'angle') {
+    const P = getP(prob.P), b = prob.base;
+    const ux = b.bx - b.ax, uy = b.by - b.ay;
+    let best = null;
+    for (const o of S.objs) {
+      if (isArc(o) || o.given || !onObj(o, P)) continue;
+      const dx = o.bx - o.ax, dy = o.by - o.ay;
+      const tP = ((P.x - o.ax) * dx + (P.y - o.ay) * dy) / (dx * dx + dy * dy);
+      const [t0, t1] = tRange(o), sides = [];
+      if (t1 > tP + 1e-3) sides.push([dx, dy, o.p2]);
+      if (t0 < tP - 1e-3) sides.push([-dx, -dy, o.p1]);
+      for (const [vx, vy, pid] of sides) {
+        const m = angleBetween(ux, uy, vx, vy), acc = angAcc(m, prob.theta);
+        if (!best || acc > best.acc) best = { m, acc, vx, vy, pid };
+      }
+    }
+    if (!best) return showResult(null, [{ text: '점 P에서 시작하는 반직선(또는 P를 지나는 선)이 아직 없어요. [반직선] 도구로 P에서 시작하는 반직선을 그어 각을 완성하세요.' }]);
+    score = best.acc;
+    const R = getP(best.pid);
+    highlight = { type: 'angle', P, u: [ux, uy], v: [best.vx, best.vy] };
+    const Rl = R && R.id !== P.id ? R.label : '';
+    items.push(angText(Rl ? `∠QP${Rl}` : '새로 그린 각', '∠XOY', best.m, prob.theta));
+    if (score < 100 && R && R.id !== P.id) blame([R], items);
+  }
+
+  if (kind === 'sss' || kind === 'sas' || kind === 'asa') {
+    let best = null;
+    for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) {
+      if (!adj.get(pts[i].id).has(pts[j].id)) continue;
+      for (let k = j + 1; k < pts.length; k++) {
+        if (!adj.get(pts[i].id).has(pts[k].id) || !adj.get(pts[j].id).has(pts[k].id)) continue;
+        const V = [pts[i], pts[j], pts[k]];
+        const area = Math.abs((V[1].x - V[0].x) * (V[2].y - V[0].y) - (V[2].x - V[0].x) * (V[1].y - V[0].y)) / 2;
+        if (area < 200) continue;
+        const r = evalTriangle(V);
+        if (!best || r.score > best.score) best = r;
+      }
+    }
+    if (!best) return showResult(null, [{ text: '작도하는 곳에서 삼각형을 찾지 못했어요. 세 꼭짓점이 모두 자로 그은 선(선분·반직선·직선)으로 이어져 있어야 해요.' }]);
+    score = best.score;
+    highlight = { type: 'poly', pts: best.V };
+    items.push(...best.items);
+    if (score < 100) blame(best.V, items);
+  }
+
+  showResult(score, items);
+}
+
+function evalTriangle(V) {
+  const s = [0, 1, 2].map(i => dist(V[(i + 1) % 3], V[(i + 2) % 3]));   // s[i]: V[i]의 대변
+  const ang = [0, 1, 2].map(i => {
+    const p = V[i], q = V[(i + 1) % 3], r = V[(i + 2) % 3];
+    return angleBetween(q.x - p.x, q.y - p.y, r.x - p.x, r.y - p.y);
+  });
+  const side = i => `선분 ${V[(i + 1) % 3].label}${V[(i + 2) % 3].label}`;
+  const angName = i => `∠${V[(i + 1) % 3].label}${V[i].label}${V[(i + 2) % 3].label}`;
+  const kind = prob.kind, t = prob.t, cands = [];
+  const perms = [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]];
+
+  if (kind === 'sss') for (const [x, y, z] of perms)
+    cands.push([['len', x, 'a', t.a], ['len', y, 'b', t.b], ['len', z, 'c', t.c]]);
+  if (kind === 'sas') for (const [i, j, k] of perms)          // V[i] = A, 변 b·c는 A에 붙은 두 변
+    cands.push([['len', j, 'b', t.b], ['len', k, 'c', t.c], ['ang', i, '∠A', t.A]]);
+  if (kind === 'asa') for (const [i, j, k] of perms)          // 변 a = V[i]의 대변, 양 끝 V[j], V[k]
+    cands.push([['len', i, 'a', t.a], ['ang', j, '∠B', t.B], ['ang', k, '∠C', t.C]]);
+
+  let best = null;
+  for (const c of cands) {
+    const accs = c.map(([ty, i, , tv]) => ty === 'len' ? lenAcc(s[i], tv) : angAcc(ang[i], tv));
+    const sc = accs.reduce((a, b) => a + b) / accs.length;
+    if (!best || sc > best.sc) best = { sc, c };
+  }
+  const items = best.c.map(([ty, i, name, tv]) =>
+    ty === 'len' ? lenText(side(i), `주어진 ${name}`, s[i], tv) : angText(angName(i), `주어진 ${name}`, ang[i], tv));
+  return { score: best.sc, V, items };
+}
+
+function showResult(score, items) {
+  $('resultCard').classList.remove('hidden');
+  const el = $('score'), meter = $('meter');
+  if (score === null) {
+    el.textContent = '–'; el.className = 'score bad';
+    meter.className = 'meter'; meter.firstElementChild.style.width = '0';
+    $('retry').classList.add('hidden');
+  } else {
+    const perfect = score >= 100;
+    $('retry').classList.toggle('hidden', !perfect);
+    const shown = perfect ? 100 : Math.min(99, Math.round(score));
+    el.textContent = shown + '%';
+    el.className = 'score ' + (perfect ? 'ok' : 'bad');
+    meter.className = 'meter' + (perfect ? ' ok' : '');
+    meter.firstElementChild.style.width = shown + '%';
+    if (perfect) {
+      items.unshift({ ok: true, text: '정확하게 작도했어요! 🎉 [새 문제]로 다른 문제에 도전해 보세요.' });
+      if (mode === 'challenge' && chal.running) {
+        const ms = finishChallenge();
+        items.unshift({ ok: true, text: `⏱ 기록: <b>${fmtTime(ms)}</b> (${prob.kind.toUpperCase()}) — 처음 화면의 도전 기록표에 저장했어요.` });
+      }
+      if (!solvedThis) {
+        solvedThis = true; solved[mode] = (solved[mode] || 0) + 1; renderTabs();
+        if (play === 'real') { const tip = countSuccess(); if (tip) items.push({ tip: true, text: tip }); }
+      }
+    }
+  }
+  $('feedback').innerHTML = items.map(it =>
+    `<li class="${it.tip ? 'tip' : it.ok ? 'ok' : 'bad'}">${it.text}</li>`).join('');
+  draw();
+}
+function hideResult() { $('resultCard').classList.add('hidden'); }
+
+// ───────── 힌트 ─────────
+// 학생이 지금까지 그린 것에 맞춰 "모범 작도 계획"을 세우고,
+// 아직 안 한 첫 단계를 점선으로 보여 주거나 필요 없는 것을 빨갛게 표시한다.
+const v2 = (x, y) => ({ x, y });
+const add = (p, q) => v2(p.x + q.x, p.y + q.y);
+const sub = (p, q) => v2(p.x - q.x, p.y - q.y);
+const mul = (p, k) => v2(p.x * k, p.y * k);
+const unit = p => mul(p, 1 / Math.hypot(p.x, p.y));
+const dot = (p, q) => p.x * q.x + p.y * q.y;
+const cross = (p, q) => p.x * q.y - p.y * q.x;
+const rot = (u, a) => v2(u.x * Math.cos(a) - u.y * Math.sin(a), u.x * Math.sin(a) + u.y * Math.cos(a));
+const fullC = (c, r) => ({ type: 'arc', cx: c.x, cy: c.y, r, s: 0, d: TAU });
+const ptAt = q => S.points.find(p => dist(p, q) < 0.6);
+const nm = (p, fb) => (p && p.label ? `점 ${p.label}` : fb);
+const inside = q => q.x > GX + 12 && q.x < W - 12 && q.y > 12 && q.y < H - 12;
+const arcMatch = (o, c, r) => isArc(o) && Math.hypot(o.cx - c.x, o.cy - c.y) < 0.6 && Math.abs(o.r - r) < 0.6;
+const arcCovers = (c, r, ts) => S.objs.some(o => arcMatch(o, c, r) && ts.every(t => inArc(o, t, 0.6 / r)));
+const straightThrough = (a, b) => S.objs.some(o => !isArc(o) && onObj(o, a) && onObj(o, b));
+const TOOL_NAME = { line: '직선', ray: '반직선', segment: '선분' };
+
+function newPlan() {
+  const plan = { steps: [], arcs: [], straights: [], pts: [], keep: new Set(), incomplete: false };
+  plan.point = (q, text) => {
+    plan.pts.push(q);
+    plan.steps.push({ t: 'point', q, done: !!ptAt(q), text: text || '점선 동그라미 자리(교점)에 [점] 도구로 점을 찍어요.' });
+  };
+  plan.arc = (c, r, targets, mPts, mText, cText) => {
+    plan.arcs.push({ c, r });
+    const partial = S.objs.some(o => arcMatch(o, c, r));
+    plan.steps.push({ t: 'arc', c, r, targets, mPts, done: arcCovers(c, r, targets),
+      text: (partial ? '호가 필요한 곳까지 닿지 않았어요. ' : '') +
+        `[컴퍼스]로 ${mText} 너비를 재고, ${cText}에 바늘을 꽂아 점선을 따라 호를 그려요.` +
+        (targets.length > 1 ? ' 점선 한쪽 끝을 1초 꾹 누른 뒤, 손을 떼지 말고 다른 끝까지 끌어요.' : '') });
+  };
+  plan.straight = (a, b, tool) => {
+    plan.allow(a, b);
+    plan.steps.push({ t: 'straight', a, b, tool, done: straightThrough(a, b),
+      text: `[${TOOL_NAME[tool]}] 도구로 ${nm(ptAt(a), '시작점')} → ${nm(ptAt(b), '점선 끝의 점')} 순서로 눌러 점선처럼 ${TOOL_NAME[tool]}을 그어요.` });
+  };
+  plan.allow = (a, b) => plan.straights.push([a, b]);
+  return plan;
+}
+// 기준선: 학생이 처음 그은 선을 쓰고, 없으면 그을 곳을 보여 준다
+function planBase(plan, tool, y) {
+  const base = S.objs.find(o => o.id === prob.lineId) || S.objs.find(o => !o.given && !isArc(o) && zoneOf(o) === 'work');
+  if (base) { plan.keep.add(base.id); return base; }
+  const n = TOOL_NAME[tool];
+  const x0 = prob.kind === 'seg' ? GX + 40 : GX + 25 + (prob.over || 0) * CM;     // 삼각형은 왼쪽으로 넘어가지 않게 여유를 둠
+  plan.steps.push({ t: 'base', tool, a: v2(x0, y), b: v2(Math.max(Math.min(W, 1100), 1000) - 50, y), done: false,
+    text: tool === 'ray' ? `[${n}] 도구로 점선의 왼쪽 끝을 먼저 누르고, 오른쪽 끝을 눌러 ${n}을 그어요. 왼쪽 끝이 꼭짓점이 돼요.`
+                         : `[${n}] 도구로 점선 위의 두 곳을 차례로 눌러 ${n}을 그어요.` });
+  plan.incomplete = true;
+  return null;
+}
+// 기준선 위의 시작 꼭짓점: 반직선이면 시작점, 아니면 그 선 위에 처음 찍은 점
+function planStart(base) {
+  if (base.type === 'ray') return getP(base.p1);
+  return S.points.filter(p => p.zone === 'work' && onObj(base, p)).sort((a, b) => a.id - b.id)[0];
+}
+// 시작점에서 need만큼 갈 방향 (공간이 있는 쪽, 학생이 이미 그린 쪽 우선)
+function pickDir(P, base, need, r) {
+  let u = unit(v2(base.bx - base.ax, base.by - base.ay));
+  if (base.type === 'ray') return u;
+  if (u.x < 0) u = mul(u, -1);
+  const fwd = add(P, mul(u, r)), back = add(P, mul(u, -r));
+  if (arcCovers(P, r, [back]) && !arcCovers(P, r, [fwd])) return mul(u, -1);
+  if (!inside(add(P, mul(u, need))) && inside(add(P, mul(u, -need)))) return mul(u, -1);
+  return u;
+}
+const segPts = name => prob.segs[name].map(getP);
+const segText = name => `주어진 선분 ${name}의 두 끝점을 차례로 눌러`;
+
+// 각 옮기기 (주어진 각 k번을 꼭짓점 P, 기준 방향 u에서). side: 새 변이 기준선의 어느 쪽인지(없으면 위쪽)
+function planCopy(plan, k, gname, P, u, side) {
+  const m = prob.marks[k];
+  const V = S.points.find(p => p.kind === 'given' && Math.abs(p.x - m.x) < 1e-6 && Math.abs(p.y - m.y) < 1e-6);
+  const sides = S.objs.filter(o => o.given && o.p1 === V.id);
+  const X = getP(sides[0].p2), Y = getP(sides[1].p2);
+  const uX = unit(sub(X, V)), uY = unit(sub(Y, V));
+  const th = Math.acos(clamp(dot(uX, uY), -1, 1));
+  let r0 = null;
+  const aV = S.objs.find(o => isArc(o) && dist(v2(o.cx, o.cy), V) < 0.6 && o.r > 5 && o.r < 120.6);
+  if (aV) r0 = aV.r;
+  else {
+    const q = S.points.filter(p => p.kind !== 'given' && dist(p, V) > 5 && onObj(sides[0], p)).sort((a, b) => a.id - b.id)[0];
+    if (q) r0 = dist(q, V);
+  }
+  r0 = r0 || 60;
+  const M = add(V, mul(uX, r0)), N = add(V, mul(uY, r0)), mn = dist(M, N);
+  const vName = nm(V, `주어진 ${gname}의 꼭짓점`), mName = nm(ptAt(M), '가로 변 위의 점');
+  plan.point(M, `주어진 ${gname}의 가로 변 위, 점선 동그라미 자리에 [점] 도구로 점을 찍어요. 컴퍼스 너비를 정할 때 쓸 점이에요.`);
+  plan.arc(V, r0, [M, N], [V, M], `${vName} → ${mName} 순서로 눌러`, vName);
+  plan.point(N);
+  const cand = [rot(u, -th), rot(u, th)];
+  let v = side ? (cand.find(w => Math.sign(cross(u, w)) === side) || cand[0]) : (cand[0].y <= cand[1].y ? cand[0] : cand[1]);
+  const R = add(P, mul(u, r0));
+  if (!side) {                                   // 학생이 반대쪽에 그리고 있으면 그쪽을 따른다
+    const w = v === cand[0] ? cand[1] : cand[0];
+    if (arcCovers(R, mn, [add(P, mul(w, r0))]) && !arcCovers(R, mn, [add(P, mul(v, r0))])) v = w;
+  }
+  const Z = add(P, mul(v, r0));
+  plan.arc(P, r0, [R, Z], [V, M], `다시 ${vName} → ${mName} 순서로 눌러`, nm(ptAt(P), '꼭짓점'));
+  plan.point(R);
+  plan.arc(R, mn, [Z], [M, N], `${mName} → ${nm(ptAt(N), '다른 변 위의 점')} 순서로 눌러`, nm(ptAt(R), '기준선 위에 찍은 점'));
+  plan.point(Z);
+  plan.straight(P, Z, 'ray');
+  return { v, side: Math.sign(cross(u, v)) };
+}
+function apex(B, rB, C, rC) {                     // 두 원의 교점 중 위쪽(학생이 반대쪽에 그렸으면 그쪽)
+  const c = interCC(fullC(B, rB), fullC(C, rC)).sort((p, q) => p.y - q.y);
+  if (c.length === 2 && (arcCovers(B, rB, [c[1]]) || arcCovers(C, rC, [c[1]])) && !(arcCovers(B, rB, [c[0]]) || arcCovers(C, rC, [c[0]]))) return c[1];
+  return c[0];
+}
+
+function buildPlan() {
+  const plan = newPlan(), k = prob.kind, t = prob.t;
+  if (k === 'angle') {
+    const P = getP(prob.P);
+    plan.keep.add(prob.base.id);
+    planCopy(plan, 0, '∠XOY', P, v2(1, 0));
+    return plan;
+  }
+  const base = planBase(plan, k === 'sas' ? 'ray' : 'line', k === 'seg' ? SEG_LINE_Y : 420);
+  if (!base) return plan;
+  const P = planStart(base);
+  if (!P) {                                            // 주어진 직선 위에 시작점부터 찍기
+    const x0 = k === 'seg' ? GX + 40 : GX + 25 + (prob.over || 0) * CM;
+    plan.steps.push({ t: 'point', start: true, q: project(base, x0, base.ay), done: false,
+      text: '주어진 직선 위, 점선 동그라미 근처에 [점] 도구로 점을 하나 찍어요. 이 점에서 작도를 시작해요.' });
+    plan.incomplete = true;
+    return plan;
+  }
+  plan.pts.push(P);
+  if (k === 'seg') {
+    const L = prob.L, u = pickDir(P, base, prob.double ? 2 * L : L, L);
+    const Q = add(P, mul(u, L));
+    plan.arc(P, L, [Q], segPts('AB'), '점 A → 점 B 순서로 눌러', nm(P, '시작점'));
+    plan.point(Q);
+    let E = Q;
+    if (prob.double) {
+      E = add(P, mul(u, 2 * L));
+      plan.arc(Q, L, [E], segPts('AB'), '다시 점 A → 점 B 순서로 눌러', nm(ptAt(Q), '방금 찍은 점'));
+      plan.point(E);
+      plan.allow(P, Q);
+    }
+    plan.straight(P, E, 'segment');
+  }
+  if (k === 'sss') {
+    const u = pickDir(P, base, t.a, t.a), C = add(P, mul(u, t.a));
+    plan.arc(P, t.a, [C], segPts('a'), segText('a'), nm(P, '첫 번째 꼭짓점'));
+    plan.point(C);
+    let [rB, nB, rC, nC] = [t.c, 'c', t.b, 'b'];
+    if (S.objs.some(o => arcMatch(o, P, t.b))) [rB, nB, rC, nC] = [t.b, 'b', t.c, 'c'];
+    const A = apex(P, rB, C, rC);
+    if (!A) return plan;
+    plan.arc(P, rB, [A], segPts(nB), segText(nB), nm(P, '첫 번째 꼭짓점'));
+    plan.arc(C, rC, [A], segPts(nC), segText(nC), nm(ptAt(C), '두 번째 꼭짓점'));
+    plan.point(A);
+    plan.allow(P, C);
+    plan.straight(P, A, 'segment');
+    plan.straight(C, A, 'segment');
+  }
+  if (k === 'sas') {
+    const u = pickDir(P, base, Math.max(t.b, t.c), t.b);
+    const { v } = planCopy(plan, 0, '∠A', P, u);
+    let [rU, nU, rV, nV] = [t.b, 'b', t.c, 'c'];
+    if (arcCovers(P, t.c, [add(P, mul(u, t.c))])) [rU, nU, rV, nV] = [t.c, 'c', t.b, 'b'];
+    const C = add(P, mul(u, rU)), B = add(P, mul(v, rV));
+    plan.arc(P, rU, [C], segPts(nU), segText(nU), nm(P, '꼭짓점'));
+    plan.point(C);
+    plan.arc(P, rV, [B], segPts(nV), segText(nV), nm(P, '꼭짓점'));
+    plan.point(B);
+    plan.allow(P, C); plan.allow(P, B);
+    plan.straight(C, B, 'segment');
+  }
+  if (k === 'asa') {
+    const u = pickDir(P, base, t.a, t.a), C = add(P, mul(u, t.a));
+    plan.arc(P, t.a, [C], segPts('a'), segText('a'), nm(P, '첫 번째 꼭짓점'));
+    plan.point(C);
+    const r1 = planCopy(plan, 0, '∠B', P, u);
+    const r2 = planCopy(plan, 1, '∠C', C, mul(u, -1), -r1.side);
+    const A = interSS({ type: 'ray', ax: P.x, ay: P.y, bx: P.x + r1.v.x, by: P.y + r1.v.y },
+                      { type: 'ray', ax: C.x, ay: C.y, bx: C.x + r2.v.x, by: C.y + r2.v.y })[0];
+    if (A) { plan.point(A); plan.allow(P, A); plan.allow(C, A); }
+    plan.allow(P, C);
+  }
+  return plan;
+}
+// 작도하는 곳에서 계획에 없는 선·호·점
+function findWrong(plan) {
+  if (plan.incomplete) return [];
+  const wrong = [], okObj = new Set();
+  for (const o of S.objs) {
+    if (o.given || zoneOf(o) !== 'work') continue;
+    const ok = isArc(o) ? plan.arcs.some(a => arcMatch(o, a.c, a.r))
+                        : plan.keep.has(o.id) || plan.straights.some(([a, b]) => onObj(o, a) && onObj(o, b));
+    if (ok) okObj.add(o.id); else wrong.push({ type: 'obj', id: o.id });
+  }
+  for (const p of S.points) {
+    if (p.kind === 'given' || p.zone !== 'work') continue;
+    const ok = plan.pts.some(q => dist(p, q) < 0.6) ||
+      S.objs.some(o => okObj.has(o.id) && (o.p1 === p.id || o.p2 === p.id || o.c === p.id));
+    if (!ok) wrong.push({ type: 'pt', id: p.id });
+  }
+  return wrong;
+}
+function renderHintBtn() {
+  const left = HINT_MAX - hintsUsed;
+  $('hint').innerHTML = left > 0 ? `💡 힌트<br><small>(${left}번 남음)</small>` : '💡 힌트<br><small>(다 썼어요)</small>';
+  $('hint').disabled = left <= 0;
+}
+function showHint() {
+  if (hintsUsed >= HINT_MAX) return;
+  hintsUsed++; renderHintBtn();
+  const plan = buildPlan(), wrong = findWrong(plan);
+  let html;
+  if (wrong.length) {
+    hintView = { wrong };
+    html = `<p class="hint-now bad"><b>지울 것이 있어요</b>빨간색으로 표시한 ${wrong.length}개는 이 작도에 필요 없거나 잘못 그린 거예요. [지우개]로 모두 지운 뒤 다시 [💡 힌트]를 눌러 보세요.</p>`;
+  } else {
+    const st = plan.steps.find(s => !s.done);
+    hintView = st ? { step: st } : null;
+    html = st ? `<p class="hint-now"><b>다음에 할 일</b>${st.text}</p>`
+              : '<p class="hint-now ok"><b>다 그렸어요!</b>필요한 것을 모두 그렸어요. [채점하기]를 눌러 확인해요.</p>';
+  }
+  if (hintsUsed >= HINT_MAX) html += '<p class="empty" style="margin-top:8px">이번 문제의 힌트를 모두 썼어요. 이제 스스로 해 봐요! 💪</p>';
+  $('hintBox').innerHTML = html;
+  draw();
+}
+function clearHint() {
+  if (play === 'practice') { practiceGuide(); return; }       // 연습 모드는 힌트 대신 늘 다음 할 일을 보여 줌
+  hintView = null;
+  $('hintBox').innerHTML = `<p class="empty">막히면 [💡 힌트]를 눌러요(문제마다 ${HINT_MAX}번까지). 다음에 그릴 것을 <b>점선</b>으로 보여 주고, 지워야 할 것은 <b style="color:var(--bad)">빨간색</b>으로 알려 줘요.</p>`;
+}
+
+// ───────── 효과음 (파일 없이 소리를 직접 만들어 냄) ─────────
+// pop: 뿅! (점 찍기·지우개), pencil: 연필로 긋는 소리 (선분·반직선·직선·컴퍼스)
+const SND_KEY = 'jakdo-sound';
+let soundOn = true;
+try { soundOn = localStorage.getItem(SND_KEY) !== 'off'; } catch (_) {}
+let actx = null;
+function audio() {
+  if (!actx) { const A = window.AudioContext || window.webkitAudioContext; if (!A) return null; actx = new A(); }
+  if (actx.state === 'suspended') actx.resume();
+  return actx;
+}
+// 길이 sec 짜리 백색 잡음
+function noise(a, sec) {
+  const b = a.createBuffer(1, Math.ceil(a.sampleRate * sec), a.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const s = a.createBufferSource(); s.buffer = b; return s;
+}
+function sfx(kind) {
+  if (!soundOn) return;
+  const a = audio(); if (!a) return;
+  const t = a.currentTime, g = a.createGain(); g.connect(a.destination);
+  if (kind === 'pop') {                                   // 뿅!: 짧게 높아지는 소리
+    const o = a.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(420, t); o.frequency.exponentialRampToValueAtTime(1100, t + .09);
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.35, t + .015); g.gain.exponentialRampToValueAtTime(.0001, t + .16);
+    o.connect(g); o.start(t); o.stop(t + .17);
+  } else if (kind === 'pencil') {                         // 연필: 흑연이 종이를 긁는 '슥' 한 번 (끊김 없이 0.3초)
+    const D = .3, n = noise(a, D + .02), bp = a.createBiquadFilter(), hp = a.createBiquadFilter();
+    bp.type = 'bandpass'; bp.Q.value = 1.6; hp.type = 'highpass'; hp.frequency.value = 1800;
+    bp.frequency.setValueAtTime(3800, t); bp.frequency.linearRampToValueAtTime(5000, t + D);      // 긋는 동안 살짝 높아짐
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.22, t + .03);
+    g.gain.setValueAtTime(.22, t + D * .75); g.gain.exponentialRampToValueAtTime(.0001, t + D);
+    n.connect(hp); hp.connect(bp); bp.connect(g); n.start(t); n.stop(t + D + .02);
+  }
+}
+
+// ───────── 연습 모드 안내 ─────────
+// 힌트와 같은 작도 계획으로, 지금 할 단계를 주황색으로 보여 주고 어떤 도구를 골라 어디를 누를지 설명한다
+const GUIDE_COL = '#ff7a00';
+const stepTool = st => st.t === 'arc' ? 'compass' : st.t === 'point' ? 'point' : st.tool;
+const STEP_SHORT = { arc: '컴퍼스로 호 그리기', point: '교점에 점 찍기', base: '기준선 긋기' };
+function stepShort(st) { return st.start ? '시작점 찍기' : st.t === 'straight' ? `${TOOL_NAME[st.tool]} 긋기` : STEP_SHORT[st.t]; }// 지금 눌러야 할 곳 (도구를 고른 뒤): { q: 점, text: 설명 }
+function guidePress(st) {
+  const need = stepTool(st);
+  if (tool !== need) return null;
+  if (st.t === 'arc') {
+    if (compass.stage === 0) return { q: st.mPts[0], text: '① 표시한 점을 눌러 컴퍼스 너비를 재기 시작해요.' };
+    if (compass.stage === 1) return { q: st.mPts[1], text: '② 표시한 점을 눌러 너비를 정해요.' };
+    if (compass.stage === 2) return { q: st.c, text: '이제 바늘을 꽂을 곳(주황 동그라미)을 눌러요.' };
+    return { q: st.targets[0], text: st.targets.length > 1 ? '점선의 한쪽 끝을 1초 꾹 누른 채로 다른 끝까지 끌어 호를 그려요.' : '점선 위를 눌러 호를 그려요.' };
+  }
+  if (st.t === 'point') return { q: st.q, text: '주황 동그라미 안을 눌러 점을 찍어요.' };
+  return pending.length ? { q: st.b, text: '이제 끝점(주황 동그라미)을 눌러요.' } : { q: st.a, text: '먼저 시작점(주황 동그라미)을 눌러요.' };
+}
+function practiceGuide() {
+  const plan = buildPlan(), wrong = findWrong(plan);
+  // 안내 칸에는 1번부터의 작도 순서만 보여 줌 (지금 할 일은 그림판의 주황색 표시와 반짝이는 도구로 알려 줌)
+  let need = null, i = -1;
+  if (wrong.length) { hintView = { wrong }; need = 'eraser'; }
+  else {
+    i = plan.steps.findIndex(s => !s.done);
+    const st = plan.steps[i];
+    if (!st) hintView = null;
+    else {
+      need = stepTool(st);
+      const pr = guidePress(st);
+      hintView = { step: st, guide: true, press: pr && pr.q };
+    }
+  }
+  // 처음부터 끝까지 모든 단계: 시작점을 찍기 전이면 그 자리에 점이 있다고 치고 나머지 단계를 미리 세움
+  let steps = plan.steps;
+  const first = plan.steps.find(s => !s.done);
+  if (plan.incomplete && first && first.start) steps = [...plan.steps, ...previewAfterStart(first.q).steps];
+  else if (!plan.incomplete && prob.kind !== 'angle') steps = [{ t: 'point', start: true, done: true }, ...plan.steps];
+  // 처음부터 주어진 직선이 이미 해 주는 단계(선분 작도의 마지막 긋기 등)는 목록에서 뺌
+  steps = steps.filter(s => !(s.t === 'straight' && S.objs.some(o => o.given && !isArc(o) && onObj(o, s.a) && onObj(o, s.b))));
+  i = steps.indexOf(first);
+  $('hintBox').innerHTML = '<ol class="guide-list">' + steps.map((s, k) =>
+    `<li class="${k === i ? 'now' : ''}">${s.done ? '✓' : k === i ? '▶' : '·'} ${k + 1}. ${stepShort(s)}</li>`).join('') + '</ol>';
+  document.querySelectorAll('.tool').forEach(b => b.classList.toggle('need', b.dataset.tool === need && tool !== need));
+}
+// 시작점 q에 점을 찍었다고 치고 세운 작도 계획 (상태는 그대로 되돌림)
+function previewAfterStart(q) {
+  const saved = JSON.stringify(S);
+  addPoint(q.x, q.y, 'on'); interCache = null;
+  const plan = buildPlan();
+  S = JSON.parse(saved); interCache = null;
+  return plan;
+}
+function clearGuideTools() { document.querySelectorAll('.tool.need').forEach(b => b.classList.remove('need')); }
+
+// ───────── 그리기 ─────────
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+let view = { s: 1, ox: 0, oy: 0, dpr: 1 };
+function resize() {
+  const r = $('wrap').getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  if (!r.width) return;
+  cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+  W = Math.max(900, H * r.width / r.height);        // 가로가 넓으면 작도하는 곳을 오른쪽으로 늘림
+  const s = Math.min(r.width / W, r.height / H);
+  view = { s, ox: 0, oy: 0, dpr };                    // 주어진 조건 칸을 왼쪽 끝에 붙임
+  draw();
+}
+function toWorld(e) {
+  const r = cv.getBoundingClientRect();
+  return { x: (e.clientX - r.left - view.ox) / view.s, y: (e.clientY - r.top - view.oy) / view.s };
+}
+
+function draw() {
+  if (!S) return;
+  const { s, ox, oy, dpr } = view, px = 1 / s;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.setTransform(dpr * s, 0, 0, dpr * s, dpr * ox, dpr * oy);
+  const perfect = $('score').classList.contains('ok');
+
+  // 영역
+  // 바탕은 비워 두어 그림판(한지) 결이 비쳐 보이게. 주어진 조건 칸만 살짝 누렇게
+  ctx.fillStyle = 'rgba(196,160,96,.13)'; ctx.fillRect(0, 0, GX, H);
+  ctx.strokeStyle = 'rgba(120,90,40,.35)'; ctx.lineWidth = 2 * px; ctx.setLineDash([8 * px, 6 * px]);
+  ctx.beginPath(); ctx.moveTo(GX, 0); ctx.lineTo(GX, H); ctx.stroke(); ctx.setLineDash([]);
+  const tag = (x, text, bg, fg) => {                     // 그림판 크기에 맞춰 함께 커지고 작아짐
+    ctx.font = '700 14px "Noto Serif KR", Batang, serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    const w = ctx.measureText(text).width + 18, h = 24;
+    ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect(x, 8, w, h, 3); ctx.fill();
+    ctx.fillStyle = fg; ctx.fillText(text, x + 9, 8 + h / 2);
+  };
+  tag(10, '주어진 조건', 'rgba(150,110,50,.16)', '#6b4f22');
+  tag(GX + 10, '작도하는 곳', 'rgba(42,33,24,.08)', '#2a2118');
+
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.clip();
+
+  // 결과 강조(아래 깔기)
+  if (highlight && highlight.type === 'poly') {
+    ctx.fillStyle = perfect ? 'rgba(42,157,111,.18)' : 'rgba(214,69,69,.13)';
+    ctx.beginPath(); highlight.pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath(); ctx.fill();
+  }
+  if (highlight && highlight.type === 'angle') {
+    const a1 = Math.atan2(highlight.u[1], highlight.u[0]), a2 = Math.atan2(highlight.v[1], highlight.v[0]);
+    let d = a2 - a1; while (d > Math.PI) d -= TAU; while (d < -Math.PI) d += TAU;
+    ctx.fillStyle = perfect ? 'rgba(42,157,111,.25)' : 'rgba(214,69,69,.2)';
+    ctx.beginPath(); ctx.moveTo(highlight.P.x, highlight.P.y);
+    ctx.arc(highlight.P.x, highlight.P.y, 60, a1, a1 + d, d < 0); ctx.closePath(); ctx.fill();
+  }
+
+  const clipZone = o => {
+    ctx.save(); ctx.beginPath();
+    if (zoneOf(o) === 'given') ctx.rect(0, 0, GX, H); else ctx.rect(GX, 0, W - GX, H);
+    ctx.clip();
+  };
+  // 호
+  for (const o of S.objs) if (isArc(o)) {
+    clipZone(o);
+    ctx.strokeStyle = o.given ? '#6f7d99' : DRAW_COL.compass; ctx.lineWidth = (o.given ? 1.8 : 2.2) * px; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(o.cx, o.cy, o.r, o.s, o.s + o.d); ctx.stroke();
+    ctx.restore();
+  }
+  // 직선류
+  for (const o of S.objs) if (!isArc(o)) {
+    clipZone(o);
+    const dx = o.bx - o.ax, dy = o.by - o.ay, k = 4000 / Math.hypot(dx, dy);
+    let x0 = o.ax, y0 = o.ay, x1 = o.bx, y1 = o.by;
+    if (o.type !== 'segment') { x1 = o.ax + dx * k; y1 = o.ay + dy * k; }
+    if (o.type === 'line') { x0 = o.ax - dx * k; y0 = o.ay - dy * k; }
+    ctx.strokeStyle = o.given ? '#2f4b7c' : DRAW_COL[o.type];
+    ctx.lineWidth = (o.given ? 3 : 2.4) * px;
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+    ctx.restore();
+  }
+  if (highlight && highlight.type === 'seg') {
+    ctx.strokeStyle = perfect ? '#2a9d6f' : '#d64545'; ctx.lineWidth = 6 * px; ctx.globalAlpha = .5;
+    ctx.beginPath(); ctx.moveTo(highlight.pts[0].x, highlight.pts[0].y); ctx.lineTo(highlight.pts[1].x, highlight.pts[1].y); ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  // 컴퍼스 미리보기
+  if (tool === 'compass' && compass.stage >= 1) {
+    const A = getP(compass.a);
+    ctx.setLineDash([6 * px, 5 * px]); ctx.strokeStyle = '#e4572e'; ctx.lineWidth = 1.6 * px;
+    if (compass.stage === 1 && cursor) {
+      ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(cursor.x, cursor.y); ctx.stroke();
+    }
+    if (compass.stage >= 2) {
+      const B = getP(compass.b);
+      ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.stroke();
+    }
+    if (compass.stage === 3) {
+      const C = getP(compass.c);
+      ctx.strokeStyle = '#b3b9c6'; ctx.lineWidth = 1.2 * px;              // 회색 안내 원(호를 그리면 사라짐)
+      ctx.beginPath(); ctx.arc(C.x, C.y, compass.r, 0, TAU); ctx.stroke();
+      ctx.setLineDash([]);
+      const pr = compass.press;
+      const sw = compass.sweep || (pr ? { a0: pr.a, acc: 0 } : cursor && cursor.kind === 'sweep' ? { a0: cursor.a, acc: 0 } : null);
+      if (sw) {
+        const [st, d] = arcSpan(sw);
+        ctx.strokeStyle = DRAW_COL.compass; ctx.lineWidth = 3 * px; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.arc(C.x, C.y, compass.r, st, st + d); ctx.stroke();
+      }
+      if (!compass.sweep && pr) {                           // 꾹 누르는 중: 1초 진행 고리
+        const f = Math.min(1, (performance.now() - pr.t0) / HOLD_MS);
+        ctx.lineWidth = 4 * px; ctx.lineCap = 'round';
+        ctx.strokeStyle = 'rgba(228,87,46,.2)';
+        ctx.beginPath(); ctx.arc(pr.w.x, pr.w.y, 22 * px, 0, TAU); ctx.stroke();
+        ctx.strokeStyle = '#e4572e';
+        ctx.beginPath(); ctx.arc(pr.w.x, pr.w.y, 22 * px, -Math.PI / 2, -Math.PI / 2 + f * TAU); ctx.stroke();
+      }
+    }
+    ctx.setLineDash([]);
+  }
+  // 선 도구 미리보기
+  if (pending.length && cursor && tool !== 'compass') {
+    const A = getP(pending[0]);
+    ctx.setLineDash([6 * px, 5 * px]); ctx.strokeStyle = DRAW_COL[tool] || '#e4572e'; ctx.lineWidth = 2 * px;
+    ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(cursor.x, cursor.y); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // 글자(주어진 조건)
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (const t of prob.texts) {
+    ctx.font = t.angle ? `700 ${18 * px}px sans-serif` : `italic 700 ${21 * px}px "Times New Roman", serif`;
+    ctx.fillStyle = '#2f4b7c';
+    ctx.textAlign = t.angle ? 'left' : 'center';
+    ctx.fillText(t.text, t.x, t.y);
+  }
+
+  // 점
+  const sel = new Set([...pending, ...(tool === 'compass' ? [compass.a, compass.b, compass.c] : [])]);
+  for (const p of S.points) {
+    if (sel.has(p.id)) {
+      ctx.strokeStyle = '#e4572e'; ctx.lineWidth = 2.5 * px;
+      ctx.beginPath(); ctx.arc(p.x, p.y, 11 * px, 0, TAU); ctx.stroke();
+    }
+    const hideDot = p.kind === 'given' && p.zone === 'given';           // 주어진 조건 그림의 점은 표시하지 않음 (누르면 그 점을 씀)
+    ctx.beginPath(); ctx.arc(p.x, p.y, (p.zone === 'given' ? 2.25 : 4.5) * px, 0, TAU);
+    if (hideDot) { /* 점 없이 이름만 */ }
+    else if (p.kind === 'free' || p.kind === 'on') {
+      ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = '#e4572e'; ctx.lineWidth = 2 * px; ctx.stroke();
+    } else { ctx.fillStyle = '#2f4b7c'; ctx.fill(); }
+    if (p.label) {
+      const [lx, ly] = p.lo || [11, -11];
+      ctx.font = `600 ${15 * px}px sans-serif`; ctx.fillStyle = '#1f2430';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(p.label, p.x + lx * px, p.y + ly * px);
+    }
+  }
+
+  // 빨간 표시(지울 것): 점은 동그라미, 선·호는 굵게 덧칠
+  const redMark = h => {
+    ctx.strokeStyle = 'rgba(214,69,69,.75)'; ctx.lineCap = 'round';
+    if (h.type === 'pt') {
+      const p = getP(h.id); if (!p) return;
+      ctx.lineWidth = 3 * px; ctx.beginPath(); ctx.arc(p.x, p.y, 12 * px, 0, TAU); ctx.stroke();
+      return;
+    }
+    const o = S.objs.find(o => o.id === h.id); if (!o) return;
+    clipZone(o); ctx.lineWidth = 7 * px; ctx.globalAlpha = .6; ctx.beginPath();
+    if (isArc(o)) ctx.arc(o.cx, o.cy, o.r, o.s, o.s + o.d);
+    else {
+      const dx = o.bx - o.ax, dy = o.by - o.ay, k = 4000 / Math.hypot(dx, dy);
+      ctx.moveTo(o.type === 'line' ? o.ax - dx * k : o.ax, o.type === 'line' ? o.ay - dy * k : o.ay);
+      ctx.lineTo(o.type === 'segment' ? o.bx : o.ax + dx * k, o.type === 'segment' ? o.by : o.ay + dy * k);
+    }
+    ctx.stroke(); ctx.globalAlpha = 1; ctx.restore();
+  };
+  // 힌트
+  if (hintView && hintView.wrong) hintView.wrong.forEach(redMark);
+  if (hintView && hintView.step) {
+    const st = hintView.step, HC = hintView.guide ? GUIDE_COL : '#e4572e';
+    if (hintView.press) {                                    // 연습 모드: 지금 누를 곳을 주황색 원으로 강조
+      const q = hintView.press;
+      ctx.save(); ctx.fillStyle = 'rgba(255,122,0,.22)'; ctx.strokeStyle = GUIDE_COL; ctx.lineWidth = 3.5 * px;
+      ctx.beginPath(); ctx.arc(q.x, q.y, 19 * px, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.font = `800 ${13 * px}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillStyle = '#c25400';
+      ctx.fillText('여기를 눌러요', q.x, q.y - 23 * px);
+      ctx.restore();
+    }
+    ctx.strokeStyle = HC; ctx.fillStyle = HC; ctx.lineCap = 'round';
+    ctx.setLineDash([9 * px, 7 * px]); ctx.lineWidth = 3 * px;
+    if (st.t === 'arc') {
+      const angs = st.targets.map(q => Math.atan2(q.y - st.c.y, q.x - st.c.x));
+      let a0 = angs[0] - ARC_MIN / 2, d = ARC_MIN;
+      if (angs.length > 1) {
+        d = mod(angs[1] - angs[0], TAU); a0 = angs[0];
+        if (d > Math.PI) { a0 = angs[1]; d = TAU - d; }
+        a0 -= rad(12); d += rad(24);
+      }
+      clipZone({ type: 'arc', cx: st.c.x });
+      ctx.beginPath(); ctx.arc(st.c.x, st.c.y, st.r, a0, a0 + d); ctx.stroke();
+      ctx.restore();
+      ctx.setLineDash([]); ctx.lineWidth = 2.5 * px;
+      ctx.beginPath(); ctx.arc(st.c.x, st.c.y, 9 * px, 0, TAU); ctx.stroke();      // 바늘 꽂을 곳
+      st.mPts.forEach((q, i) => {                                                   // 컴퍼스로 잴 두 점 ①②
+        ctx.beginPath(); ctx.arc(q.x, q.y, 13 * px, 0, TAU); ctx.stroke();
+        ctx.font = `800 ${12 * px}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(i ? '②' : '①', q.x + 14 * px, q.y + 16 * px);
+      });
+    }
+    if (st.t === 'point') {
+      ctx.beginPath(); ctx.arc(st.q.x, st.q.y, 13 * px, 0, TAU); ctx.stroke();
+    }
+    if (st.t === 'straight' || st.t === 'base') {
+      const dx = st.b.x - st.a.x, dy = st.b.y - st.a.y, k = 4000 / Math.hypot(dx, dy);
+      const end = st.tool === 'segment' || st.t === 'base' ? st.b : v2(st.a.x + dx * k, st.a.y + dy * k);
+      const start = st.tool === 'line' && st.t !== 'base' ? v2(st.a.x - dx * k, st.a.y - dy * k) : st.a;
+      ctx.beginPath(); ctx.moveTo(start.x, start.y); ctx.lineTo(end.x, end.y); ctx.stroke();
+      if (st.t === 'base') {
+        ctx.setLineDash([]);
+        for (const q of [st.a, st.b]) { ctx.beginPath(); ctx.arc(q.x, q.y, 9 * px, 0, TAU); ctx.stroke(); }
+      }
+    }
+    ctx.setLineDash([]);
+  }
+  // 지우개: 지워질 것을 빨갛게 표시
+  if (cursor && cursor.kind === 'erase') {
+    if (cursor.hit) redMark(cursor.hit);
+    ctx.strokeStyle = '#d64545'; ctx.lineWidth = 1.5 * px; ctx.setLineDash([3 * px, 3 * px]);
+    ctx.beginPath(); ctx.arc(cursor.x, cursor.y, 10 * px, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+  }
+  // 손가락/펜 위치 표시
+  if (cursor && cursor.kind !== 'sweep' && cursor.kind !== 'erase') {
+    const c = cursor.kind === 'inter' ? '#2a9d6f' : cursor.kind === 'pt' ? '#2f4b7c' : '#e4572e';
+    ctx.strokeStyle = c; ctx.lineWidth = 2 * px;
+    ctx.beginPath(); ctx.arc(cursor.x, cursor.y, 9 * px, 0, TAU); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cursor.x - 14 * px, cursor.y); ctx.lineTo(cursor.x + 14 * px, cursor.y);
+    ctx.moveTo(cursor.x, cursor.y - 14 * px); ctx.lineTo(cursor.x, cursor.y + 14 * px); ctx.stroke();
+    if (pointerDown) {
+      const tip = { pt: '이 점 사용', inter: '교점', on: '선/호 위의 점', free: '새 점' }[cursor.kind];
+      ctx.font = `600 ${13 * px}px sans-serif`; ctx.fillStyle = c; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+      ctx.fillText(tip, cursor.x + 12 * px, cursor.y + 10 * px);
+    }
+  }
+  ctx.restore();
+}
+
+// ───────── 입력 ─────────
+const tolFor = e => (e.pointerType === 'touch' ? 24 : e.pointerType === 'pen' ? 16 : 12) / view.s;
+const sweeping = () => tool === 'compass' && compass.stage === 3;
+const pick = (w, e) => tool === 'eraser'
+  ? { kind: 'erase', x: w.x, y: w.y, hit: eraserHit(w.x, w.y, tolFor(e)) }
+  : snap(w.x, w.y, tolFor(e));
+const angleAt = w => { const C = getP(compass.c); return Math.atan2(w.y - C.y, w.x - C.x); };
+cv.addEventListener('pointerdown', e => {
+  if (e.button > 0) return;
+  try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+  pointerDown = true;
+  const w = toWorld(e);
+  if (sweeping()) { compass.press = { t0: performance.now(), a: angleAt(w), w }; compass.sweep = null; cursor = null; holdTick(); }
+  else cursor = tool ? pick(w, e) : null;
+  draw();
+});
+// 꾹 누르고 있는 동안: 1초가 지나면 그 순간 손가락 위치를 시작점으로 고정하고 늘이기 모드로
+function holdTick() {
+  const pr = compass.press;
+  if (!pr || !sweeping()) return;
+  if (!compass.sweep && performance.now() - pr.t0 >= HOLD_MS) compass.sweep = { a0: pr.a, acc: 0, last: pr.a, min: 0, max: 0 };
+  draw();
+  if (!compass.sweep) requestAnimationFrame(holdTick);
+}
+cv.addEventListener('pointermove', e => {
+  const w = toWorld(e);
+  if (sweeping()) {
+    if (compass.sweep) {
+      const a = angleAt(w), sw = compass.sweep;
+      let d = a - sw.last; while (d > Math.PI) d -= TAU; while (d < -Math.PI) d += TAU;
+      sw.acc = clamp(sw.acc + d, -TAU, TAU); sw.last = a;
+      sw.min = Math.min(sw.min, sw.acc); sw.max = Math.max(sw.max, sw.acc);   // 반대로 돌려도 이미 그린 부분은 남김
+    } else if (compass.press) { compass.press.a = angleAt(w); compass.press.w = w; }   // 1초 전에는 위치만 따라감
+    else if (e.pointerType === 'mouse') cursor = { kind: 'sweep', a: angleAt(w) };
+    draw(); return;
+  }
+  if (!pointerDown && e.pointerType !== 'mouse') return;
+  cursor = tool ? pick(w, e) : null; draw();
+});
+cv.addEventListener('pointerup', e => {
+  if (!pointerDown) return;
+  pointerDown = false;
+  if (sweeping() && (compass.sweep || compass.press)) {
+    const sw = compass.sweep || { a0: compass.press.a, acc: 0 };    // 1초 전에 떼면 짧은 호
+    compass.press = null; cursor = null; finishArc(sw); return;
+  }
+  const w = toWorld(e);
+  if (tool === 'eraser') {
+    const hit = eraserHit(w.x, w.y, tolFor(e));
+    cursor = e.pointerType === 'mouse' ? pick(w, e) : null;
+    if (hit) erase(hit); else draw();
+    return;
+  }
+  if (!tool) { cursor = null; draw(); return; }            // 도구를 안 골랐으면 아무것도 안 그림
+  const sn = snap(w.x, w.y, tolFor(e));
+  cursor = e.pointerType === 'mouse' ? sn : null;
+  if (w.x >= 0 && w.x <= W && w.y >= 0 && w.y <= H) act(sn); else draw();
+});
+cv.addEventListener('pointercancel', () => { pointerDown = false; cursor = null; compass.sweep = null; compass.press = null; draw(); });
+cv.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse' && !pointerDown) { cursor = null; draw(); } });
+
+// ───────── 도전 타이머와 기록 ─────────
+const REC_KEY = 'jakdo-challenge-records';
+let chal = { running: false, t0: 0, iv: null };
+const fmtTime = ms => { const s = ms / 1000, m = Math.floor(s / 60); return `${m ? m + '분 ' : ''}${(s - m * 60).toFixed(1)}초`; };
+const clockText = ms => { const s = ms / 1000, m = Math.floor(s / 60); return `${String(m).padStart(2, '0')}:${(s - m * 60).toFixed(1).padStart(4, '0')}`; };
+let memRecords = [];        // 브라우저 저장이 막힌 환경에서는 이번 접속 동안만 기억
+function loadRecords() {
+  try { const s = localStorage.getItem(REC_KEY); if (s) return JSON.parse(s); } catch (_) {}
+  return memRecords.slice();
+}
+function saveRecords(r) { memRecords = r.slice(); try { localStorage.setItem(REC_KEY, JSON.stringify(r)); } catch (_) {} }
+function startChallenge() {
+  clearInterval(chal.iv);
+  chal = { running: true, t0: performance.now(), iv: setInterval(tickTimer, 100) };
+  $('timer').classList.remove('hidden', 'done'); tickTimer();
+}
+function stopTimer() { clearInterval(chal.iv); chal.running = false; }
+function tickTimer() { if (chal.running) $('timer').textContent = '⏱ ' + clockText(performance.now() - chal.t0); }
+function finishChallenge() {                       // 채점 100%가 처음 나온 순간
+  const ms = performance.now() - chal.t0;
+  stopTimer();
+  $('timer').textContent = '⏱ ' + clockText(ms) + ' 완료!'; $('timer').classList.add('done');
+  const recs = loadRecords();
+  recs.push({ ms: Math.round(ms), kind: prob.kind, v: prob.v, at: Date.now() });
+  saveRecords(recs);
+  recKind = prob.kind;                        // 표지에 가면 방금 푼 유형의 칸을 보여 줌
+  return ms;
+}
+let recKind = null;          // 기록표에서 보고 있는 유형 (sss / sas / asa)
+function renderRecords() {
+  const all = loadRecords();
+  if (!recKind) recKind = all.length ? all.reduce((a, b) => (b.at > a.at ? b : a)).kind : 'sss';   // 처음엔 가장 최근 유형
+  const recs = all.filter(r => r.kind === recKind).sort((a, b) => a.ms - b.ms);
+  const dt = t => { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+  const tabs = ['sss', 'sas', 'asa'].map(k => {
+    const n = all.filter(r => r.kind === k).length;
+    return `<button class="rec-tab k-${k}${k === recKind ? ' on' : ''}" data-kind="${k}">${k.toUpperCase()} 합동<small>${n}</small></button>`;
+  }).join('');
+  const rows = recs.slice(0, 15).map((r, i) => `
+    <tr${i === 0 ? ' class="best"' : ''}>
+      <td class="rk">${i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}</td>
+      <td class="tm">${fmtTime(r.ms)}</td>
+      <td class="dt">${dt(r.at)}</td>
+    </tr>`).join('');
+  $('records').innerHTML = `<h3>🏆 도전 기록</h3><div class="rec-tabs">${tabs}</div>` + (recs.length
+    ? `<table><thead><tr><th>순위</th><th>완료 시간</th><th>날짜</th></tr></thead><tbody>${rows}</tbody></table>
+       <p class="rec-foot">${recKind.toUpperCase()} ${recs.length}번 완료 · 빠른 순${recs.length > 15 ? ' (상위 15개)' : ''}</p>`
+    : `<p class="rec-empty">아직 ${recKind.toUpperCase()} 기록이 없어요.<br>[도전!]에서 ${recKind.toUpperCase()} 문제를 풀면 채점 100%까지 걸린 시간이 여기에 기록돼요.</p>`)
+    + (all.length ? '<p class="rec-foot"><span></span><button class="link" id="clearRec">기록 모두 지우기</button></p>' : '');
+}
+
+// ───────── 화면 전환 ─────────
+function $(id) { return document.getElementById(id); }
+function renderCover() {
+  renderRecords();
+  $('modeGrid').innerHTML = MODES.map((m, i) => `
+    <button class="mode-card ${m.id === 'challenge' ? 'challenge' : ''} ${isLocked(m.id) ? 'locked' : ''}" data-mode="${m.id}" style="--c:${m.c};--cbg:${m.cbg}">
+      <span class="ic"><svg viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-linecap="round">${m.icon}</svg>${solved[m.id] ? `<span class="done">${solved[m.id]}개 완료</span>` : ''}</span>
+      <span>
+        <span class="num">${m.id === 'challenge' ? 'CHALLENGE' : 'STEP ' + (i + 1)}</span>
+        <h2>${m.title}</h2>
+        <p>${m.desc}</p>
+      </span>
+      ${isLocked(m.id) ? `<span class="lock-badge"><span><b>🔒 잠김</b><small>${lockNeedText(m.id)}<br>또는 코드 입력</small></span></span>` : ''}
+      <svg class="tassel" viewBox="0 0 12 56"><path d="M6 0V14" stroke="#b9a596" stroke-width="1"/><circle cx="6" cy="17" r="3.2" fill="none" stroke="#c98f8f" stroke-width="1.4"/><path d="M6 20V26" stroke="#c98f8f" stroke-width="1.6"/><path d="M4 26H8L8.6 54H3.4Z" fill="#c9b7c4"/><path d="M5 28V53M7 28V53" stroke="#b3a0ae" stroke-width=".6"/></svg>
+    </button>`).join('');
+}
+function renderTabs() {
+  $('tabs').innerHTML = MODES.map(m =>
+    `<button data-mode="${m.id}" class="${m.id === mode ? 'on' : ''} ${isLocked(m.id) ? 'locked' : ''}">${isLocked(m.id) ? '🔒 ' : ''}${m.name}${solved[m.id] ? `<small>${solved[m.id]}</small>` : ''}</button>`).join('');
+}
+// ───────── 잠금과 코드 ─────────
+// 선분 작도만 열려 있고, 나머지는 실전 모드에서 앞 단계 문제를 종류별로 2번씩 맞히거나 선생님이 알려 준 코드로 연다.
+// 잠금 해제는 연습·실전 모드 모두에 적용되고, 이 컴퓨터(브라우저)에 저장된다. 코드 6573으로 모두 다시 잠근다.
+const LOCKABLE = ['angle', 'sss', 'sas', 'asa', 'challenge'];
+const UNLOCK_FROM = { angle: 'seg', sss: 'angle', sas: 'sss', asa: 'sas', challenge: 'asa' };   // 이 단계를 열려면 맞혀야 하는 앞 단계
+const NEED = 2;                                         // 앞 단계의 문제 1·문제 2를 각각 몇 번 맞혀야 하는지
+const LOCK_KEY = 'jakdo-unlock-v1';
+const newProg = () => Object.fromEntries(Object.values(UNLOCK_FROM).map(k => [k, [0, 0]]));
+let unlocked = new Set(), prog = newProg();
+try { const s = JSON.parse(localStorage.getItem(LOCK_KEY)); if (s) { unlocked = new Set(s.unlocked || []); prog = { ...newProg(), ...s.prog }; } } catch (_) {}
+function saveLock() { try { localStorage.setItem(LOCK_KEY, JSON.stringify({ unlocked: [...unlocked], prog })); } catch (_) {} }
+const isLocked = id => LOCKABLE.includes(id) && !unlocked.has(id);
+const modeTitle = id => MODES.find(m => m.id === id).title;
+const CODES = [
+  ['2754', '모든 코드 보기', () => showCodes()],
+  ['6572', '각 작도 잠금 해제', () => unlock(['angle'], '각 작도')],
+  ['1327', 'SSS 합동 잠금 해제', () => unlock(['sss'], 'SSS 합동')],
+  ['4328', 'SAS 합동 잠금 해제', () => unlock(['sas'], 'SAS 합동')],
+  ['9504', 'ASA 합동 잠금 해제', () => unlock(['asa'], 'ASA 합동')],
+  ['2257', '도전! 잠금 해제', () => unlock(['challenge'], '도전!')],
+  ['3852', '모든 잠금 해제', () => unlock(LOCKABLE, '모든 단계')],
+  ['6573', '모두 잠그기 (맞힌 횟수도 처음부터)', () => lockAll()],
+];
+function codeMsg(html, cls = '') { const el = $('codeMsg'); el.className = 'code-msg ' + cls; el.innerHTML = html; }
+function unlock(ids, name) { ids.forEach(id => unlocked.add(id)); saveLock(); renderCover(); codeMsg(`🔓 ${name} 잠금이 풀렸어요!`, 'ok'); }
+function lockAll() { unlocked.clear(); prog = newProg(); saveLock(); renderCover(); codeMsg('🔒 잠글 수 있는 단계를 모두 잠갔어요. 맞힌 횟수도 처음부터 다시 세요.', 'ok'); }
+function showCodes() { codeMsg('<table>' + CODES.map(([c, d]) => `<tr><td>${c}</td><td>${d}</td></tr>`).join('') + '</table>'); }
+// 코드 입력 칸: 실제 숫자는 따로 기억하고, 칸에는 ★로만 보여 줌
+let codeVal = '';
+function codeInput() {
+  const el = $('codeIn'), v = el.value, stars = (v.match(/★/g) || []).length;
+  codeVal = (codeVal.slice(0, stars) + v.replace(/★/g, '').replace(/\D/g, '')).slice(0, 8);
+  el.value = '★'.repeat(codeVal.length);
+}
+function enterCode() {
+  const v = codeVal, hit = CODES.find(c => c[0] === v);
+  $('codeIn').value = ''; codeVal = '';
+  if (hit) hit[2](); else codeMsg(v ? '코드가 맞지 않아요.' : '코드를 입력해 주세요.', 'bad');
+}
+// 잠긴 단계 카드에 보여 줄 조건 (실전 모드에서 앞 단계 문제를 몇 번 맞혔는지)
+function lockNeedText(id) {
+  const from = UNLOCK_FROM[id], p = prog[from], names = VARIANT_NAMES[from];
+  return `실전 「${modeTitle(from)}」 ${names[0]} ${Math.min(p[0], NEED)}/${NEED} · ${names[1]} ${Math.min(p[1], NEED)}/${NEED}`;
+}
+// 실전 모드에서 맞혔을 때: 횟수를 세고, 조건을 채운 단계는 잠금 해제. 채점 칸에 보여 줄 안내 글을 돌려줌
+function countSuccess() {
+  if (prob.kind !== mode || !prog[mode]) return '';
+  prog[mode][prob.v]++;
+  const opened = LOCKABLE.filter(id => !unlocked.has(id) && prog[UNLOCK_FROM[id]].every(n => n >= NEED));
+  opened.forEach(id => unlocked.add(id));
+  saveLock();
+  if (opened.length) { renderTabs(); setTimeout(() => showUnlock(opened), 700); return ''; }
+  const next = LOCKABLE.find(id => UNLOCK_FROM[id] === mode);
+  return next && isLocked(next) ? `🔒 「${modeTitle(next)}」 잠금 해제까지: ${lockNeedText(next)}` : '';
+}
+function showUnlock(ids) {
+  $('unlockMsg').innerHTML = `연습 모드와 실전 모드에서<br><b>${ids.map(modeTitle).join(', ')}</b>이(가) 잠금 해제되었습니다!`;
+  $('unlockModal').classList.remove('hidden');
+}
+$('uHome').addEventListener('click', () => { $('unlockModal').classList.add('hidden'); goCover(); });
+$('uAgain').addEventListener('click', () => { $('unlockModal').classList.add('hidden'); makeProblem(); });
+
+// ───────── 연습 / 실전 모드 ─────────
+let play = null;                                        // 'practice' 연습 모드, 'real' 실전 모드
+function choosePlay(p) {
+  play = p;
+  $('start').classList.add('hidden'); $('cover').classList.remove('hidden');
+  $('playPill').textContent = p === 'practice' ? '✏️ 연습 모드 — 작도하는 방법을 하나하나 알려 줘요' : '🎯 실전 모드 — 스스로 작도하고 채점해요';
+  $('playPill').classList.toggle('practice', p === 'practice');
+  $('cover').classList.toggle('no-side', p === 'practice');           // 도전 기록은 실전 모드에서만 (연습 모드는 단계 카드만 넓게)
+  $('hint').classList.toggle('hidden', p === 'practice');
+  $('hintTitle').textContent = p === 'practice' ? '🧭 작도 순서 안내' : '💡 힌트';
+  if (p !== 'practice') clearGuideTools();
+  renderCover();
+}
+function goStart() { $('cover').classList.add('hidden'); $('app').classList.add('hidden'); $('start').classList.remove('hidden'); }
+$('start').addEventListener('click', e => { const b = e.target.closest('[data-play]'); if (b) choosePlay(b.dataset.play); });
+$('toStart').addEventListener('click', goStart);
+function openMode(m) {
+  mode = m; variant = 0;
+  $('cover').classList.add('hidden'); $('app').classList.remove('hidden');
+  renderTabs(); makeProblem(); resize();
+}
+function goCover() {
+  stopTimer();
+  $('app').classList.add('hidden'); $('cover').classList.remove('hidden');
+  renderCover();
+}
+$('records').addEventListener('click', e => {
+  const tab = e.target.closest('.rec-tab');
+  if (tab) { recKind = tab.dataset.kind; renderRecords(); return; }
+  if (e.target.id === 'clearRec' && confirm('도전 기록을 모두 지울까요? 되돌릴 수 없어요.')) { saveRecords([]); renderRecords(); }
+});
+$('modeGrid').addEventListener('click', e => {
+  const b = e.target.closest('.mode-card'); if (!b) return;
+  if (isLocked(b.dataset.mode)) {                           // 잠긴 단계: 설정 창의 코드 입력 칸을 열어 줌
+    openSettings(); codeMsg(`🔒 잠긴 단계예요. ${lockNeedText(b.dataset.mode)}을(를) 채우거나 코드를 입력하면 열려요.`, 'bad'); $('codeIn').focus(); return;
+  }
+  openMode(b.dataset.mode);
+});
+$('codeGo').addEventListener('click', enterCode);
+$('codeIn').addEventListener('keydown', e => { if (e.key === 'Enter') enterCode(); });
+$('codeIn').addEventListener('input', codeInput);
+$('home').addEventListener('click', goCover);
+
+// ───────── 설정: 효과음, 전체 화면, 코드 입력 ─────────
+function settingsUI() {
+  const fs = !!document.fullscreenElement;
+  $('sndBtn').textContent = soundOn ? '켜짐' : '꺼짐'; $('sndBtn').classList.toggle('on', soundOn);
+  $('fsBtn').textContent = fs ? '켜짐' : '꺼짐'; $('fsBtn').classList.toggle('on', fs);
+}
+function openSettings() { codeMsg(''); settingsUI(); $('settings').classList.remove('hidden'); }
+document.addEventListener('click', e => { if (e.target.closest('[data-settings]')) openSettings(); });
+$('setClose').addEventListener('click', () => $('settings').classList.add('hidden'));
+$('settings').addEventListener('click', e => { if (e.target.id === 'settings') $('settings').classList.add('hidden'); });   // 바깥을 누르면 닫힘
+$('sndBtn').addEventListener('click', () => {
+  soundOn = !soundOn; try { localStorage.setItem(SND_KEY, soundOn ? 'on' : 'off'); } catch (_) {}
+  settingsUI(); sfx('pop');
+});
+$('fsBtn').addEventListener('click', () => {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen?.().catch(() => alert('이 브라우저에서는 전체 화면을 쓸 수 없어요. F11 키를 눌러 보세요.'));
+});
+document.addEventListener('fullscreenchange', settingsUI);           // Esc로 나와도 맞게 바뀜
+$('tabs').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || isLocked(b.dataset.mode)) return;
+  mode = b.dataset.mode; variant = 0; renderTabs(); makeProblem();
+});
+// 고른 도구를 한 번 더 누르면 선택 취소 (아무 도구도 안 고른 상태)
+document.querySelectorAll('.tool').forEach(b => b.addEventListener('click', () => setTool(b.dataset.tool === tool ? null : b.dataset.tool)));
+$('undo').addEventListener('click', undo);
+$('clear').addEventListener('click', clearAll);
+$('newProb').addEventListener('click', makeProblem);
+$('variants').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  variant = +b.dataset.v; makeProblem();
+});
+$('check').addEventListener('click', grade);
+$('retry').addEventListener('click', makeProblem);
+$('hint').addEventListener('click', showHint);
+document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); } });
+
+new ResizeObserver(resize).observe($('wrap'));
+setTool('segment');
+renderCover();
+</script>
+</body>
+</html>
