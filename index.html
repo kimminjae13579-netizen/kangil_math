@@ -896,7 +896,7 @@ function makeProblem() {
     prob.task = '한 변의 길이가 a이고 그 양 끝 각의 크기가 ∠B, ∠C인 삼각형을 작도하시오.';
   }
 
-  if (kind !== 'angle') {                              // 작도하는 곳에 처음부터 주어지는 직선
+  {                                                    // 작도하는 곳에 처음부터 주어지는 직선 (모든 단계)
     const y = kind === 'seg' ? SEG_LINE_Y : 420;
     const l = { id: S.nextId++, type: 'line', ax: GX + 40, ay: y, bx: GX + 400, by: y, p1: null, p2: null, given: true };
     S.objs.push(l); interCache = null;
@@ -1117,8 +1117,8 @@ function grade() {
   }
 
   if (kind === 'angle') {
-    // 작도하는 곳에서 두 선(선분·반직선·직선)이 만나 생기는 각 중 ∠XOY에 가장 가까운 것을 찾음 (어디에 그려도 됨)
-    const lines = S.objs.filter(o => !isArc(o) && !o.given && zoneOf(o) === 'work');
+    // 작도하는 곳에서 두 선(선분·반직선·직선, 주어진 직선 포함)이 만나 생기는 각 중 ∠XOY에 가장 가까운 것을 찾음 (어디에 그려도 됨)
+    const lines = S.objs.filter(o => !isArc(o) && zoneOf(o) === 'work');
     const sidesAt = (o, V) => {                        // 꼭짓점 V에서 선 o를 따라 갈 수 있는 방향들
       const dx = o.bx - o.ax, dy = o.by - o.ay, t = ((V.x - o.ax) * dx + (V.y - o.ay) * dy) / (dx * dx + dy * dy);
       const [t0, t1] = tRange(o), out = [];
@@ -1345,18 +1345,13 @@ function apex(B, rB, C, rC) {                     // 두 원의 교점 중 위�
 
 function buildPlan() {
   const plan = newPlan(), k = prob.kind, t = prob.t;
-  if (k === 'angle') {                                 // 학생이 처음 그은 선을 한 변으로 씀. 없으면 반직선부터
-    const base = S.objs.find(o => !o.given && !isArc(o) && zoneOf(o) === 'work');
-    if (!base) {
-      plan.steps.push({ t: 'base', tool: 'ray', a: v2(GX + 80, 420), b: v2(GX + 370, 420), done: false,
-        text: '[반직선] 도구로 점선의 왼쪽 끝을 먼저 누르고, 오른쪽 끝을 눌러 반직선을 그어요. 왼쪽 끝이 각의 꼭짓점이 돼요. (작도하는 곳 어디에 그려도 괜찮아요)' });
-      plan.incomplete = true; return plan;
-    }
+  if (k === 'angle') {                                 // 주어진 직선을 각의 한 변으로 씀
+    const base = S.objs.find(o => o.id === prob.lineId);
     plan.keep.add(base.id);
     const P = planStart(base);
     if (!P) {
-      plan.steps.push({ t: 'point', start: true, q: project(base, (base.ax + base.bx) / 2, (base.ay + base.by) / 2), done: false,
-        text: '그은 선 위, 점선 동그라미 근처에 [점] 도구로 점을 하나 찍어요. 이 점이 각의 꼭짓점이 돼요.' });
+      plan.steps.push({ t: 'point', start: true, q: project(base, GX + 80, base.ay), done: false,
+        text: '주어진 직선 위, 점선 동그라미 근처에 [점] 도구로 점을 하나 찍어요. 이 점이 각의 꼭짓점이 돼요.' });
       plan.incomplete = true; return plan;
     }
     let u = unit(v2(base.bx - base.ax, base.by - base.ay));
@@ -1550,7 +1545,7 @@ function practiceGuide() {
   let steps = plan.steps;
   const first = plan.steps.find(s => !s.done);
   if (plan.incomplete && first && first.start) steps = [...plan.steps, ...previewAfterStart(first.q).steps];
-  else if (!plan.incomplete && prob.kind !== 'angle') steps = [{ t: 'point', start: true, done: true }, ...plan.steps];
+  else if (!plan.incomplete) steps = [{ t: 'point', start: true, done: true }, ...plan.steps];
   // 처음부터 주어진 직선이 이미 해 주는 단계(선분 작도의 마지막 긋기 등)는 목록에서 뺌
   steps = steps.filter(s => !(s.t === 'straight' && S.objs.some(o => o.given && !isArc(o) && onObj(o, s.a) && onObj(o, s.b))));
   i = steps.indexOf(first);
