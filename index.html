@@ -1354,6 +1354,7 @@ function buildPlan() {
         text: '주어진 직선 위, 점선 동그라미 근처에 [점] 도구로 점을 하나 찍어요. 이 점이 각의 꼭짓점이 돼요.' });
       plan.incomplete = true; return plan;
     }
+    plan.pts.push(P);                                  // 꼭짓점으로 찍은 점은 지울 것이 아님
     let u = unit(v2(base.bx - base.ax, base.by - base.ay));
     if (base.type !== 'ray' && u.x < 0) u = mul(u, -1);
     planCopy(plan, 0, '∠XOY', P, u);
