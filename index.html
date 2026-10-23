@@ -364,7 +364,7 @@
   }
   .mode-card .lock-badge b { background: rgba(255,251,242,.95); border: 1px solid #c9ad92; border-radius: 3px; padding: 4px 12px; box-shadow: 0 2px 6px rgba(80,55,20,.15); }
   .tabs button.locked { opacity: .45; cursor: not-allowed; }
-  .mode-card .lock-badge small { display: block; margin-top: 6px; font-size: .78rem; font-family: "Pretendard", "Malgun Gothic", sans-serif; color: #6b5444; text-align: center; line-height: 1.5; }
+  .mode-card .lock-badge small { display: block; margin-top: 6px; font-size: .95rem; font-family: "Pretendard", "Malgun Gothic", sans-serif; color: #6b5444; text-align: center; line-height: 1.5; }
   .mode-card .lock-badge > span { display: flex; flex-direction: column; align-items: center; background: rgba(255,251,242,.95); border: 1px solid #c9ad92; border-radius: 3px; padding: 6px 12px; box-shadow: 0 2px 6px rgba(80,55,20,.15); }
 
   /* 모드 고르기 (연습 / 실전) */
@@ -845,14 +845,10 @@ function makeProblem() {
 
   if (kind === 'angle') {
     const theta = obtuse ? randint(95, 150) : randint(25, 85);
-    prob.reserved = ['X', 'O', 'Y', 'P', 'Q'];
+    prob.reserved = ['X', 'O', 'Y'];
     givenAngle(GX / 2, 260, theta, '', ['O', 'X', 'Y']);
-    const P = addPoint(GX + 80, 420, 'given', 'P', [-8, 16]);
-    const Q = addPoint(GX + 370, 420, 'given', 'Q', [0, 16]);
-    P.zone = Q.zone = 'work';
-    prob.base = addStraight('ray', P, Q, true);
-    prob.P = P.id; prob.theta = theta;
-    prob.task = '반직선 PQ를 한 변으로 하고 ∠XOY와 크기가 같은 각을 작도하시오.';
+    prob.theta = theta;                                // 작도하는 곳 어디에 그려도 됨 (주어진 반직선 없음)
+    prob.task = '작도하는 곳에 ∠XOY와 크기가 같은 각을 작도하시오.';
   }
 
   if (kind === 'sss') {
@@ -1121,28 +1117,31 @@ function grade() {
   }
 
   if (kind === 'angle') {
-    const P = getP(prob.P), b = prob.base;
-    const ux = b.bx - b.ax, uy = b.by - b.ay;
+    // 작도하는 곳에서 두 선(선분·반직선·직선)이 만나 생기는 각 중 ∠XOY에 가장 가까운 것을 찾음 (어디에 그려도 됨)
+    const lines = S.objs.filter(o => !isArc(o) && !o.given && zoneOf(o) === 'work');
+    const sidesAt = (o, V) => {                        // 꼭짓점 V에서 선 o를 따라 갈 수 있는 방향들
+      const dx = o.bx - o.ax, dy = o.by - o.ay, t = ((V.x - o.ax) * dx + (V.y - o.ay) * dy) / (dx * dx + dy * dy);
+      const [t0, t1] = tRange(o), out = [];
+      if (t1 > t + 1e-3) out.push([dx, dy, o.p2]);
+      if (t0 < t - 1e-3) out.push([-dx, -dy, o.p1]);
+      return out;
+    };
     let best = null;
-    for (const o of S.objs) {
-      if (isArc(o) || o.given || !onObj(o, P)) continue;
-      const dx = o.bx - o.ax, dy = o.by - o.ay;
-      const tP = ((P.x - o.ax) * dx + (P.y - o.ay) * dy) / (dx * dx + dy * dy);
-      const [t0, t1] = tRange(o), sides = [];
-      if (t1 > tP + 1e-3) sides.push([dx, dy, o.p2]);
-      if (t0 < tP - 1e-3) sides.push([-dx, -dy, o.p1]);
-      for (const [vx, vy, pid] of sides) {
-        const m = angleBetween(ux, uy, vx, vy), acc = angAcc(m, prob.theta);
-        if (!best || acc > best.acc) best = { m, acc, vx, vy, pid };
+    for (let i = 0; i < lines.length; i++) for (let j = i + 1; j < lines.length; j++)
+      for (const V of intersect(lines[i], lines[j])) {
+        if (zoneAt(V) !== 'work') continue;
+        for (const [ux, uy, pu] of sidesAt(lines[i], V)) for (const [vx, vy, pv] of sidesAt(lines[j], V)) {
+          const m = angleBetween(ux, uy, vx, vy), acc = angAcc(m, prob.theta);
+          if (!best || acc > best.acc) best = { m, acc, V, u: [ux, uy], v: [vx, vy], pu, pv };
+        }
       }
-    }
-    if (!best) return showResult(null, [{ text: '점 P에서 시작하는 반직선(또는 P를 지나는 선)이 아직 없어요. [반직선] 도구로 P에서 시작하는 반직선을 그어 각을 완성하세요.' }]);
+    if (!best) return showResult(null, [{ text: '작도하는 곳에 한 점에서 만나는 두 선이 있어야 각이 생겨요. [반직선] 도구로 각의 두 변을 그어 보세요.' }]);
     score = best.acc;
-    const R = getP(best.pid);
-    highlight = { type: 'angle', P, u: [ux, uy], v: [best.vx, best.vy] };
-    const Rl = R && R.id !== P.id ? R.label : '';
-    items.push(angText(Rl ? `∠QP${Rl}` : '새로 그린 각', '∠XOY', best.m, prob.theta));
-    if (score < 100 && R && R.id !== P.id) blame([R], items);
+    highlight = { type: 'angle', P: best.V, u: best.u, v: best.v };
+    const Vp = ptAt(best.V), U = getP(best.pu), Q = getP(best.pv);
+    const ok = p => p && Vp && p.id !== Vp.id && p.label;
+    items.push(angText(ok(U) && ok(Q) ? `∠${U.label}${Vp.label}${Q.label}` : '새로 그린 각', '∠XOY', best.m, prob.theta));
+    if (score < 100) { const far = [U, Q].filter(ok); if (far.length) blame(far, items); }
   }
 
   if (kind === 'sss' || kind === 'sas' || kind === 'asa') {
@@ -1346,10 +1345,23 @@ function apex(B, rB, C, rC) {                     // 두 원의 교점 중 위�
 
 function buildPlan() {
   const plan = newPlan(), k = prob.kind, t = prob.t;
-  if (k === 'angle') {
-    const P = getP(prob.P);
-    plan.keep.add(prob.base.id);
-    planCopy(plan, 0, '∠XOY', P, v2(1, 0));
+  if (k === 'angle') {                                 // 학생이 처음 그은 선을 한 변으로 씀. 없으면 반직선부터
+    const base = S.objs.find(o => !o.given && !isArc(o) && zoneOf(o) === 'work');
+    if (!base) {
+      plan.steps.push({ t: 'base', tool: 'ray', a: v2(GX + 80, 420), b: v2(GX + 370, 420), done: false,
+        text: '[반직선] 도구로 점선의 왼쪽 끝을 먼저 누르고, 오른쪽 끝을 눌러 반직선을 그어요. 왼쪽 끝이 각의 꼭짓점이 돼요. (작도하는 곳 어디에 그려도 괜찮아요)' });
+      plan.incomplete = true; return plan;
+    }
+    plan.keep.add(base.id);
+    const P = planStart(base);
+    if (!P) {
+      plan.steps.push({ t: 'point', start: true, q: project(base, (base.ax + base.bx) / 2, (base.ay + base.by) / 2), done: false,
+        text: '그은 선 위, 점선 동그라미 근처에 [점] 도구로 점을 하나 찍어요. 이 점이 각의 꼭짓점이 돼요.' });
+      plan.incomplete = true; return plan;
+    }
+    let u = unit(v2(base.bx - base.ax, base.by - base.ay));
+    if (base.type !== 'ray' && u.x < 0) u = mul(u, -1);
+    planCopy(plan, 0, '∠XOY', P, u);
     return plan;
   }
   const base = planBase(plan, k === 'sas' ? 'ray' : 'line', k === 'seg' ? SEG_LINE_Y : 420);
@@ -1925,7 +1937,7 @@ function renderCover() {
         <h2>${m.title}</h2>
         <p>${m.desc}</p>
       </span>
-      ${isLocked(m.id) ? `<span class="lock-badge"><span><b>🔒 잠김</b><small>${lockNeedText(m.id)}<br>또는 코드 입력</small></span></span>` : ''}
+      ${isLocked(m.id) ? `<span class="lock-badge"><span><b>🔒 잠김</b><small>${lockNeedText(m.id)}</small></span></span>` : ''}
       <svg class="tassel" viewBox="0 0 12 56"><path d="M6 0V14" stroke="#b9a596" stroke-width="1"/><circle cx="6" cy="17" r="3.2" fill="none" stroke="#c98f8f" stroke-width="1.4"/><path d="M6 20V26" stroke="#c98f8f" stroke-width="1.6"/><path d="M4 26H8L8.6 54H3.4Z" fill="#c9b7c4"/><path d="M5 28V53M7 28V53" stroke="#b3a0ae" stroke-width=".6"/></svg>
     </button>`).join('');
 }
