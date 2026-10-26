@@ -2146,7 +2146,8 @@ $('tabs').addEventListener('click', e => {
 document.querySelectorAll('.tool').forEach(b => b.addEventListener('click', () => setTool(b.dataset.tool === tool ? null : b.dataset.tool)));
 $('undo').addEventListener('click', undo);
 $('clear').addEventListener('click', clearAll);
-$('newProb').addEventListener('click', makeProblem);
+// 새 문제: 도전 중이면 처음으로 돌아가지 않고 지금 단계(같은 유형)의 다른 문제로, 타이머도 그대로 (3문제를 다 푼 뒤에는 처음부터)
+$('newProb').addEventListener('click', () => { if (mode === 'challenge' && chal.running) chalKeep = true; makeProblem(); });
 $('variants').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   variant = +b.dataset.v; makeProblem();
