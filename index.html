@@ -424,6 +424,11 @@
     aside { width: auto; overflow: visible; }
   }
   @media (max-width: 560px) { .mode-grid, .cover-body .mode-grid { grid-template-columns: 1fr; } }
+  /* 도전 결과 칸의 기록표 */
+  .chal-rank { width: 100%; border-collapse: collapse; margin-top: 8px; font-variant-numeric: tabular-nums; font-size: .95rem; }
+  .chal-rank th { text-align: left; color: #8a7a6a; font-weight: 600; font-size: .8rem; padding: 3px 8px; }
+  .chal-rank td { padding: 4px 8px; border-top: 1px dashed #e2d6c4; }
+  .chal-rank tr.me td { background: #fff1c9; font-weight: 800; color: #9a5b00; }
   /* 기록이 저장되지 않는 브라우저 경고 */
   .store-warn { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 100; display: flex; gap: 10px; align-items: flex-start;
     width: min(680px, calc(100% - 24px)); background: #fff4e5; color: #7a3d00; border: 2px solid #f0a74a; border-radius: 14px; padding: 10px 14px;
@@ -917,7 +922,7 @@ function makeProblem() {
   history = []; pending = []; highlight = null; solvedThis = false; hintsUsed = 0; renderHintBtn();
   resetCompass();
   $('taskTag').textContent = mode === 'challenge' ? `도전 ${chalStep + 1}/3` : play === 'practice' ? '연습' : '문제';
-  if (mode === 'challenge' && play === 'real') { if (!keep) startChallenge(); }   // 기록은 실전 모드에서만, 세 문제를 이어서 잼
+  if (mode === 'challenge') { if (!keep) startChallenge(); }   // 도전: 세 문제를 다 풀 때까지 이어서 잼
   else { stopTimer(); $('timer').classList.add('hidden'); }
   $('task').textContent = prob.task;
   renderVariants(); clearHint(); hideResult(); updateStatus(); draw();
@@ -1234,8 +1239,9 @@ function showResult(score, items) {
       } else if (mode === 'challenge') {
         items.shift();
         if (chal.running) {
-          const ms = finishChallenge();
-          items.unshift({ ok: true, text: `🏆 도전 3문제 모두 성공! 기록: <b>${fmtTime(ms)}</b> — 처음 화면의 도전 기록표에 저장했어요.` });
+          const { ms, at } = finishChallenge(), recs = loadRecords().filter(r => r.kind === 'set' && (r.play || 'real') === play).sort((a, b) => a.ms - b.ms);
+          const rank = recs.findIndex(r => r.at === at) + 1;
+          items.unshift({ ok: true, text: `🏆 도전 3문제 모두 성공! 걸린 시간 <b>${fmtTime(ms)}</b> · <b>${rank}위</b> (${play === 'practice' ? '연습' : '실전'} 모드 기록 ${recs.length}개 중)${chalRankTable(recs, at)}` });
         } else items.unshift({ ok: true, text: '🏆 도전 3문제(SSS·SAS·ASA)를 모두 성공했어요! [새 문제]로 다시 도전해 보세요.' });
       }
       if (!solvedThis) {
@@ -1926,13 +1932,21 @@ function finishChallenge() {                       // 채점 100%가 처음 나�
   stopTimer();
   $('timer').textContent = '⏱ ' + clockText(ms) + ' 완료!'; $('timer').classList.add('done');
   const recs = loadRecords();
-  recs.push({ ms: Math.round(ms), kind: 'set', at: Date.now() });   // set: SSS·SAS·ASA 세 문제를 모두 푼 시간
+  const at = Date.now();
+  recs.push({ ms: Math.round(ms), kind: 'set', play, at });   // set: SSS·SAS·ASA 세 문제를 모두 푼 시간
   saveRecords(recs);
-  return ms;
+  return { ms, at };
+}
+// 결과 칸에 넣을 기록표: 빠른 순으로 위에서부터, 방금 기록은 강조 (10위 밖이면 맨 아래에 따로)
+function chalRankTable(recs, at) {
+  const me = recs.findIndex(r => r.at === at), show = recs.slice(0, 10).map((r, i) => [r, i]);
+  if (me >= 10) show.push([recs[me], me]);
+  return `<table class="chal-rank"><thead><tr><th>순위</th><th>걸린 시간</th></tr></thead><tbody>${show.map(([r, i]) =>
+    `<tr class="${r.at === at ? 'me' : ''}"><td>${i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}</td><td>${fmtTime(r.ms)}${r.at === at ? ' ← 방금' : ''}</td></tr>`).join('')}</tbody></table>`;
 }
 function renderRecords() {
   const all = loadRecords();
-  const recs = all.filter(r => r.kind === 'set').sort((a, b) => a.ms - b.ms);   // 세 문제(SSS·SAS·ASA)를 모두 푼 기록만
+  const recs = all.filter(r => r.kind === 'set' && (r.play || 'real') === 'real').sort((a, b) => a.ms - b.ms);   // 실전 모드에서 세 문제(SSS·SAS·ASA)를 모두 푼 기록만
   const dt = t => { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
   const rows = recs.slice(0, 15).map((r, i) => `
     <tr${i === 0 ? ' class="best"' : ''}>
