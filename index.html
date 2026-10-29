@@ -62,6 +62,23 @@
   .records .rk { width: 34px; text-align: center; }
   .records .tm { font-weight: 700; white-space: nowrap; }
   .records .dt { color: var(--muted); font-size: .8rem; white-space: nowrap; }
+  /* 명예의 전당 (선생님이 적는 학생 기록) */
+  #hof {                                                          /* 빨강과 바탕 베이지의 중간색 */
+    padding: 0; border: 5px solid #c4564f; border-radius: 6px; box-shadow: 0 0 0 2px #9e3d38, var(--shadow);
+    background: radial-gradient(ellipse at 50% 0, #e3a08f 0%, #d47e72 60%, #c46a60 100%);
+  }
+  #hof::before { display: none; }
+  #hof h3 { margin: 0; padding: 14px 8px 6px; text-align: center; color: #fff8e6; font-size: 2rem; font-weight: 900; letter-spacing: .18em; text-shadow: 0 2px 0 #8a2f2a, 0 0 10px rgba(110,30,25,.35); }
+  #hof .list { margin: 8px;border-radius: 4px; background: #f5edd8; border: 3px solid #4a3426; max-height: 330px; overflow-y: auto; }
+  #hof table { font-size: .86rem; color: #4a3a2a; }
+  #hof th { position: sticky; top: 0; background: #5b4030; color: #fbe9c8; border: 0; padding: 6px; text-align: center; }
+  #hof td { padding: 6px; border-bottom: 1px solid #e2d4b4; white-space: nowrap; text-align: center; font-weight: 600; }
+  #hof tr:nth-child(even) td { background: #efe4c9; }
+  #hof tr.best td { background: #ffe6a6; }
+  #hof .rk { width: auto; color: #7a3a1a; font-weight: 800; }
+  #hof .nm { white-space: normal; font-weight: 800; }
+  #hof .tm { color: #2f2118; }
+  #hof .rec-empty { margin: 0; padding: 14px 10px; text-align: center; color: #6b5442; font-size: .85rem; }
   .kind { display: inline-block; font-size: .78rem; font-weight: 800; color: #fff; border-radius: 6px; padding: 2px 7px; }
   .k-sss { background: #e4572e; } .k-sas { background: #7b4bd1; } .k-asa { background: #2a9d6f; }
   .rec-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
@@ -355,8 +372,7 @@
   .code-msg.ok { color: var(--ok); font-weight: 700; }
   .code-msg table { border-collapse: collapse; margin-top: 4px; width: 100%; }
   .code-msg td { padding: 3px 6px; border-bottom: 1px dashed #d8c7a0; }
-  .code-msg td:first-child { font-weight: 800; letter-spacing: .1em; width: 60px; }
-  .mode-card.locked { cursor: not-allowed; }
+  .code-msg td:first-child { font-weight: 800; letter-spacing: .1em; width: 60px; }  .mode-card.locked { cursor: not-allowed; }
   .mode-card.locked > span:not(.lock-badge), .mode-card.locked .tassel { opacity: .38; filter: grayscale(.8); }
   .mode-card .lock-badge {
     position: absolute; inset: 0; display: grid; place-items: center; z-index: 2;
@@ -524,6 +540,7 @@
       <div class="mode-grid" id="modeGrid"></div>
       <div class="side">
         <aside class="records" id="records"></aside>
+        <aside class="records hof" id="hof"></aside>
       </div>
     </div>
     <p class="cover-foot">도구는 <b>눈금 없는 자</b>와 <b>컴퍼스</b>뿐이에요. 길이와 각은 컴퍼스로 재서 옮겨요.</p>
@@ -1912,7 +1929,7 @@ cv.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse' && !poi
 // ───────── 도전 타이머와 기록 ─────────
 const REC_KEY = 'jakdo-challenge-records';
 let chal = { running: false, t0: 0, iv: null };
-const fmtTime = ms => { const s = ms / 1000, m = Math.floor(s / 60); return `${m ? m + '분 ' : ''}${(s - m * 60).toFixed(1)}초`; };
+const fmtTime = ms => `${(ms / 1000).toFixed(1)}초`;               // 분 없이 초로만 (예: 67.0초)
 const clockText = ms => { const s = ms / 1000, m = Math.floor(s / 60); return `${String(m).padStart(2, '0')}:${(s - m * 60).toFixed(1).padStart(4, '0')}`; };
 let memRecords = [];        // 브라우저 저장이 막힌 환경에서는 이번 접속 동안만 기억
 function loadRecords() {
@@ -1961,10 +1978,42 @@ function renderRecords() {
     + (all.length ? '<p class="rec-foot"><span></span><button class="link" id="clearRec">기록 모두 지우기</button></p>' : '');
 }
 
+// ───────── 🏛️ 명예의 전당: 선생님이 직접 적는 학생 기록 (가장 빨리 끝낸 사람부터 저절로 순위가 매겨짐) ─────────
+// 한 줄에 한 명씩 아래처럼 적어요. 기록은 초로 적어요 ('83.4초'). '1분 23.4초'로 적어도 83.4초로 바뀌어 보여요.
+//   { 연도: 2026, 반: '1-2', 이름: '홍길동', 기록: '83.4초' },
+const HALL_OF_FAME = [
+  { 연도: 2026, 반: '1-3', 이름: '유지우', 기록: '32.6초' },
+  { 연도: 2026, 반: '1-3', 이름: '이승미', 기록: '43.7초' },
+  { 연도: 2026, 반: '1-3', 이름: '허찬', 기록: '51.6초' },
+  { 연도: 2026, 반: '1-3', 이름: '권구현', 기록: '46.2초' },
+  { 연도: 2026, 반: '1-3', 이름: '백지오', 기록: '67.5초' },
+];
+function hofMs(t) {                                              // 기록 글자 → 밀리초 (순위 비교용)
+  const s = String(t).trim();
+  if (s.includes(':')) { const [m, sec] = s.split(':'); return ((+m || 0) * 60 + parseFloat(sec)) * 1000; }
+  const m = s.match(/(?:(\d+)\s*분)?\s*([\d.]+)?\s*초?/);
+  return m ? ((+m[1] || 0) * 60 + (parseFloat(m[2]) || 0)) * 1000 : Infinity;
+}
+function renderHof() {
+  const list = HALL_OF_FAME.map(r => ({ ...r, ms: hofMs(r.기록) })).sort((a, b) => a.ms - b.ms);
+  const tm = r => isFinite(r.ms) ? fmtTime(r.ms) : (r.기록 ?? '');
+  const rows = list.map((r, i) => `
+    <tr${i === 0 ? ' class="best"' : ''}>
+      <td class="rk">${i + 1}위</td>
+      <td>${r.연도 ?? ''}</td><td>${r.반 ?? ''}</td><td class="nm">${r.이름 ?? ''}</td>
+      <td class="tm">${tm(r)}</td>
+    </tr>`).join('');
+  $('hof').innerHTML = `<h3>명예의 전당</h3>
+    <div class="list">${list.length
+      ? `<table><thead><tr><th>순위</th><th>연도</th><th>반</th><th>이름</th><th>기록</th></tr></thead><tbody>${rows}</tbody></table>`
+      : `<p class="rec-empty">아직 이름을 올린 학생이 없어요.<br>도전에서 가장 빠른 기록을 세워 이름을 올려 보세요!</p>`}</div>`;
+}
+
 // ───────── 화면 전환 ─────────
 function $(id) { return document.getElementById(id); }
 function renderCover() {
   renderRecords();
+  renderHof();
   $('modeGrid').innerHTML = MODES.map((m, i) => `
     <button class="mode-card ${m.id === 'challenge' ? 'challenge' : ''} ${isLocked(m.id) ? 'locked' : ''}" data-mode="${m.id}" style="--c:${m.c};--cbg:${m.cbg}">
       <span class="ic"><svg viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-linecap="round">${m.icon}</svg>${solved[m.id] ? `<span class="done">${solved[m.id]}개 완료</span>` : ''}</span>
@@ -2036,8 +2085,7 @@ const CODES = [
   ['9504', 'ASA 작도 잠금 해제', () => unlock(['asa'], 'ASA 작도')],
   ['2257', '도전! 잠금 해제', () => unlock(['challenge'], '도전!')],
   ['3852', '모든 잠금 해제', () => unlock(LOCKABLE, '모든 단계')],
-  ['6573', '모두 잠그기 (맞힌 횟수도 처음부터)', () => lockAll()],
-];
+  ['6573', '모두 잠그기 (맞힌 횟수도 처음부터)', () => lockAll()],];
 function codeMsg(html, cls = '') { const el = $('codeMsg'); el.className = 'code-msg ' + cls; el.innerHTML = html; }
 function unlock(ids, name) { ids.forEach(id => unlocked.add(id)); saveLock(); renderCover(); codeMsg(`🔓 ${name} 잠금이 풀렸어요!`, 'ok'); }
 function lockAll() { const s = readLock(); lockGen = Math.max(lockGen, (s && s.gen) || 0) + 1; unlocked.clear(); prog = newProg(); saveLock(true); renderCover(); codeMsg('🔒 잠글 수 있는 단계를 모두 잠갔어요. 맞힌 횟수도 처음부터 다시 세요.', 'ok'); }
