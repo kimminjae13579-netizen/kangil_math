@@ -2033,6 +2033,9 @@ function renderHof() {
       ? `<table><thead><tr><th>순위</th><th>연도</th><th>반</th><th>이름</th><th>기록</th></tr></thead><tbody>${rows}</tbody></table>`
       : all.length ? `<p class="rec-empty">이 조건에 맞는 학생이 없어요.</p>`
       : `<p class="rec-empty">아직 이름을 올린 학생이 없어요.<br>도전에서 가장 빠른 기록을 세워 이름을 올려 보세요!</p>`}</div>`;
+  // 5위까지만 보이고 6위부터는 목록 안에서 스크롤 (줄 높이는 그대로 두고 목록 칸 높이만 5줄에 맞춤)
+  const box = $('hof').querySelector('.list'), tr = box.querySelectorAll('tr');
+  if (tr.length > 6 && tr[5].offsetHeight) box.style.maxHeight = (tr[5].getBoundingClientRect().bottom - box.getBoundingClientRect().top + box.clientTop * 2) + 'px';
 }
 
 // ───────── 화면 전환 ─────────
