@@ -1082,7 +1082,7 @@
     </div>
     <img class="hs s1" alt=""><img class="hs s2" alt=""><img class="hs s3" alt=""><img class="hs s4" alt="">
     <h1 class="logo"><span class="l1">도형 월드</span><em>동물 탐험대</em></h1>
-    <div class="hero-cat"><div class="cover-title hidden" id="coverTitle"></div><canvas id="coverCat"></canvas><span class="nameplate">🐱 탐험대원 냥이</span></div>
+    <div class="hero-cat"><div class="cover-title hidden" id="coverTitle"></div><canvas id="coverCat"></canvas><span class="nameplate" id="nameplate">🐱 탐험대원 냥이</span></div>
     <div class="world-pick" id="worldPick">
       <button data-world="2d" class="wbig w2"><span class="wi">📐</span><b>2D 세계</b><small>다각형 · 원과 부채꼴</small></button>
       <button data-world="3d" class="wbig w3"><span class="wi">🧊</span><b>3D 세계</b><small>다면체 · 회전체</small></button>
@@ -6672,65 +6672,35 @@ function g3Tick() {
 // ── 고양이 도우미: 구름을 타고 다니며 붓으로 칠하고, 양동이로 물을 붓는다 ──
 function makeCat() {
   const M = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: .6, ...o });
-  // 그림책 같은 치즈 고양이: 연한 주황 한 가지 색 + 진한 주황 줄무늬, 까만 점 눈과 ω 입
-  const tex = (w, h, paint) => { const cv = document.createElement('canvas'); cv.width = w; cv.height = h; paint(cv.getContext('2d'), w, h); const t = new THREE.CanvasTexture(cv); t.anisotropy = 4; return t; };
-  const BASE = '#f2b062', STRIPE = '#e5862e';
-  const bodyTex = tex(512, 256, (c, w, h) => {              // 몸통: u=0(앞)·u=1(앞). 앞쪽에 앞다리를 나타내는 세로줄 두 개와 발끝
-    c.fillStyle = BASE; c.fillRect(0, 0, w, h);
-    c.strokeStyle = STRIPE; c.lineCap = 'round'; c.lineWidth = 7;
-    for (const [x, foot] of [[w * .045, 1], [w * .955, -1]]) {
-      c.beginPath(); c.moveTo(x, h * .5); c.lineTo(x - foot * 3, h * .96); c.stroke();
-      c.beginPath(); c.moveTo(x - foot * 3, h * .96); c.lineTo(x - foot * 24, h * .96); c.stroke();
-    }
-  });
-  const headTex = tex(512, 256, (c, w, h) => {              // 머리: u=.25가 얼굴. 정수리에 세로 줄무늬 셋, 양 볼에 가로줄 둘
-    c.fillStyle = BASE; c.fillRect(0, 0, w, h);
-    c.strokeStyle = STRIPE; c.lineCap = 'round'; c.lineWidth = 15;
-    for (const [dx, len] of [[-.04, .16], [0, .2], [.04, .16]]) { c.beginPath(); c.moveTo(w * (.25 + dx), h * .06); c.lineTo(w * (.25 + dx * .85), h * (.06 + len)); c.stroke(); }
-    c.lineWidth = 11;
-    for (const x of [.09, .41]) for (const dy of [0, .09]) { c.beginPath(); c.moveTo(w * x - 20, h * (.49 + dy)); c.lineTo(w * x + 20, h * (.49 + dy)); c.stroke(); }
-  });
+  // 그림책 같은 치즈 고양이 (겉모습은 catSkin이 입힘: 고양이 또는 히든 퀘스트로 만난 동물 친구)
   const fur = M(0xf2b062, { roughness: .95 }), dark = M(0x1c1410, { roughness: .35 }), stripe = M(0xe5862e, { roughness: .95 }),
     cloudM = M(0xffffff, { roughness: 1, emissive: 0x2a3550, emissiveIntensity: .12 });
   const S = (r, m, x, y, z, sx = 1, sy = 1, sz = 1) => { const s = new THREE.Mesh(new THREE.SphereGeometry(r, 32, 24), m); s.position.set(x, y, z); s.scale.set(sx, sy, sz); return s; };
   const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
   // 몸통: 아래가 넓고 둥근 서양배 모양 (돌림체)
   const bodyProf = [[0, 0], [.3, .01], [.41, .1], [.44, .25], [.41, .42], [.34, .58], [.25, .72], [.12, .8], [0, .83]].map(([r, y]) => new THREE.Vector2(r, y));
-  const torso = new THREE.Mesh(new THREE.LatheGeometry(bodyProf, 48), new THREE.MeshStandardMaterial({ map: bodyTex, roughness: .95 }));
+  const torso = new THREE.Mesh(new THREE.LatheGeometry(bodyProf, 48), new THREE.MeshStandardMaterial({ roughness: .95 }));
   torso.scale.set(1, 1, .9); body.add(torso);
   [-1, 1].forEach(s => body.add(S(.1, fur, s * .14, .04, .33, 1, .55, 1.1)));     // 앞발 (살짝 볼록)
   // 머리: 크고 넓적한 얼굴
   const head = new THREE.Group(); head.position.y = .98; body.add(head);
-  const skull = new THREE.Mesh(new THREE.SphereGeometry(.42, 40, 30), new THREE.MeshStandardMaterial({ map: headTex, roughness: .95 }));
+  const skull = new THREE.Mesh(new THREE.SphereGeometry(.42, 40, 30), new THREE.MeshStandardMaterial({ roughness: .95 }));
   skull.scale.set(1.15, .92, .95); head.add(skull);
-  const ears = [-1, 1].map(s => {
-    // 귀: 납작한 원뿔 + 진한 주황 속귀
-    const ear = new THREE.Group(); ear.position.set(s * .25, .27, -.01); ear.rotation.z = -s * .3; head.add(ear);
-    const eo = new THREE.Mesh(new THREE.ConeGeometry(.16, .3, 24), fur); eo.scale.z = .55; eo.position.y = .1; ear.add(eo);
-    const ei = new THREE.Mesh(new THREE.ConeGeometry(.105, .21, 24), stripe); ei.scale.z = .4; ei.position.set(0, .08, .065); ear.add(ei);
-    return ear;
-  });
-  const nose = S(.022, dark, 0, -.045, .396, 1.4, .8, .6); head.add(nose);
+  const ears = [-1, 1].map(() => { const ear = new THREE.Group(); head.add(ear); return ear; });   // 귀 자리 (모양은 catSkin)
+  const face = new THREE.Group(); head.add(face);                // 코·입·주둥이 (catSkin)
   // 눈: 까만 점 (깜빡일 수 있게 묶음)
   const eyes = [-1, 1].map(s => {
     const e = new THREE.Group(); e.position.set(s * .15, .02, .372); head.add(e);
     e.add(S(.042, dark, 0, 0, 0, 1, 1.25, .5));
     return e;
   });
-  // ω 모양 입 (까만 선)
-  [-1, 1].forEach(s => {
-    const cv = new THREE.CatmullRomCurve3([V3(0, -.065, .394), V3(s * .03, -.1, .386), V3(s * .06, -.092, .382), V3(s * .075, -.072, .38)]);
-    head.add(new THREE.Mesh(new THREE.TubeGeometry(cv, 12, .008, 6), dark));
-  });
-  head.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.LineCurve3(V3(0, -.05, .396), V3(0, -.066, .394)), 2, .008, 6), dark));
   // 화가 베레모 (페인트 칠할 때만)
   const beret = new THREE.Group(); beret.position.set(.03, .35, -.06); beret.rotation.set(-.3, 0, -.2); head.add(beret);
   beret.add(S(.19, M(0xd6336c, { roughness: .9 }), 0, 0, 0, 1, .34, 1), S(.03, M(0xb02455), 0, .065, 0));
   // 꼬리: 옆으로 나와 위로 휘어 올라감 (밑동을 축으로 흔듦)
   const tail = new THREE.Group(); tail.position.set(.2, .14, -.28); body.add(tail);
-  const tc = new THREE.CatmullRomCurve3([V3(0, 0, 0), V3(.22, .02, -.12), V3(.4, .2, -.14), V3(.44, .5, -.1), V3(.36, .7, -.06)]);
-  const tailParts = [new THREE.Mesh(new THREE.TubeGeometry(tc, 40, .075, 14), fur), S(.075, fur, .36, .7, -.06)];
-  tail.add(...tailParts);
+  const tc = catTailCurve();
+  const tailParts = [];                                           // 꼬리 모양은 catSkin
   // 오른팔: 어깨를 축으로 돌림. 손에 붓 또는 양동이
   const arm = new THREE.Group(); arm.position.set(.27, .58, .14); body.add(arm);
   const am = new THREE.Mesh(new THREE.CylinderGeometry(.075, .088, .4, 16), fur); am.position.y = -.2; arm.add(am);
@@ -6759,10 +6729,125 @@ function makeCat() {
   g.add(cloud);
   g.scale.setScalar(1.25);
   const c = { g, body, head, tail, arm, armL, hand, brush, bucket, bk, mouth, cloud, eyes, beret, ears, tailParts, tailCurve: tc, cloudM,
+    face, torso, skull, fur, stripe, dark,
     theta: 0, busy: null, pouring: false, last: performance.now(), blink: performance.now() + 2000 };
+  catSkin(c);                                              // 고른 캐릭터(고양이 또는 동물 친구)의 겉모습
   LIVE_CATS.add(c); dressCat(c);                           // 옷장에서 입은 코스튬을 입혀서 나옴
   catTitleSet(c);                                          // 단 칭호를 머리 위에
   return c;
+}
+// ───────── 내 캐릭터의 겉모습: 고양이 또는 히든 퀘스트로 만난 동물 친구 (뼈대·팔·도구·옷 자리는 고양이와 같음) ─────────
+const catTailCurve = () => new THREE.CatmullRomCurve3([V3(0, 0, 0), V3(.22, .02, -.12), V3(.4, .2, -.14), V3(.44, .5, -.1), V3(.36, .7, -.06)]);
+// base 털 · stripe 줄무늬(고양이 무늬) · light 배와 얼굴 · acc 귀 속·코·부리
+const SKINS = {
+  cat:     { base: '#f2b062', stripe: '#e5862e', acc: 0xe5862e },
+  dog:     { base: '#c8915a', light: '#f3dcc0', acc: 0x8a5a34 },
+  pig:     { base: '#ffb6c4', light: '#ffd3dc', acc: 0xff8fa8 },
+  rabbit:  { base: '#f7f7f7', light: '#ffffff', acc: 0xffb3c6 },
+  tiger:   { base: '#ff9a2e', stripe: '#1f1a17', light: '#fff3e0', acc: 0x1f1a17 },
+  seal:    { base: '#9fb3c8', light: '#e6eef6', acc: 0x5b6f86 },
+  penguin: { base: '#2b3550', light: '#ffffff', acc: 0xff9f1c },
+};
+// 지금 고른 캐릭터 (CLOSET.char: 동물 친구 종류. 없거나 아직 못 만난 친구면 고양이)
+const charKind = () => { const f = CLOSET.char && FRIENDS.find(x => x.k === CLOSET.char); return f && CLOSET.owned[f.id] ? f.k : 'cat'; };
+function catSkin(c, kind = charKind()) {
+  if (c.kind === kind) return;
+  c.kind = kind;
+  const K = SKINS[kind], M = (col, o = {}) => new THREE.MeshStandardMaterial({ color: col, roughness: .8, ...o });
+  const S = (r, m, x, y, z, sx = 1, sy = 1, sz = 1) => { const s = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 18), m); s.position.set(x, y, z); s.scale.set(sx, sy, sz); return s; };
+  const tex = (w, h, paint) => { const cv = document.createElement('canvas'); cv.width = w; cv.height = h; paint(cv.getContext('2d'), w, h); const t = new THREE.CanvasTexture(cv); t.anisotropy = 4; return t; };
+  const striped = !!K.stripe;
+  // 몸통 무늬: u=0·u=1이 앞. 배(밝은 색)는 앞쪽에, 고양이·호랑이는 앞다리 줄과 발끝
+  const bodyTex = tex(512, 256, (g, w, h) => {
+    g.fillStyle = K.base; g.fillRect(0, 0, w, h);
+    if (K.light) { g.fillStyle = K.light; for (const x of [0, w]) { g.beginPath(); g.ellipse(x, h * .55, w * (kind === 'penguin' ? .2 : .12), h * .42, 0, 0, Math.PI * 2); g.fill(); } }
+    if (kind === 'tiger') { g.fillStyle = K.stripe; for (let i = 0; i < 8; i++) { const x = w * (.22 + i * .08); g.beginPath(); g.moveTo(x - 9, h * .08); g.lineTo(x + 9, h * .08); g.lineTo(x, h * .55); g.closePath(); g.fill(); } }
+    if (striped) {
+      g.strokeStyle = K.stripe; g.lineCap = 'round'; g.lineWidth = 7;
+      for (const [x, foot] of [[w * .045, 1], [w * .955, -1]]) {
+        g.beginPath(); g.moveTo(x, h * .5); g.lineTo(x - foot * 3, h * .96); g.stroke();
+        g.beginPath(); g.moveTo(x - foot * 3, h * .96); g.lineTo(x - foot * 24, h * .96); g.stroke();
+      }
+    }
+  });
+  // 머리 무늬: u=.25가 얼굴. 고양이·호랑이는 정수리 세로 줄 셋과 양 볼 가로줄, 펭귄은 하얀 얼굴
+  const headTex = tex(512, 256, (g, w, h) => {
+    g.fillStyle = K.base; g.fillRect(0, 0, w, h);
+    if (kind === 'penguin') { g.fillStyle = K.light; g.beginPath(); g.ellipse(w * .25, h * .62, w * .17, h * .4, 0, 0, Math.PI * 2); g.fill(); }
+    if (striped) {
+      g.strokeStyle = K.stripe; g.lineCap = 'round'; g.lineWidth = 15;
+      for (const [dx, len] of [[-.04, .16], [0, .2], [.04, .16]]) { g.beginPath(); g.moveTo(w * (.25 + dx), h * .06); g.lineTo(w * (.25 + dx * .85), h * (.06 + len)); g.stroke(); }
+      g.lineWidth = 11;
+      for (const x of [.09, .41]) for (const dy of [0, .09]) { g.beginPath(); g.moveTo(w * x - 20, h * (.49 + dy)); g.lineTo(w * x + 20, h * (.49 + dy)); g.stroke(); }
+    }
+  });
+  for (const [mesh, t] of [[c.torso, bodyTex], [c.skull, headTex]]) { mesh.material.map?.dispose(); mesh.material.map = t; mesh.material.needsUpdate = true; }
+  c.fur.color.set(K.base); c.stripe.color.setHex(K.acc);
+  const clear = grp => { grp.traverse(o => { if (o !== grp && o.geometry) o.geometry.dispose(); }); grp.clear(); };
+  const lightM = M(K.light || K.base), accM = M(K.acc), dark = c.dark;
+  // 귀
+  c.ears.forEach((ear, i) => {
+    const s = i ? 1 : -1; clear(ear); ear.position.set(s * .25, .27, -.01); ear.rotation.set(0, 0, -s * .3);
+    if (kind === 'cat' || kind === 'tiger') {
+      const eo = new THREE.Mesh(new THREE.ConeGeometry(kind === 'tiger' ? .14 : .16, kind === 'tiger' ? .2 : .3, 24), c.fur); eo.scale.z = .55; eo.position.y = .1; ear.add(eo);
+      const ei = new THREE.Mesh(new THREE.ConeGeometry(.105, .21, 24), kind === 'tiger' ? lightM : c.stripe); ei.scale.set(kind === 'tiger' ? .8 : 1, kind === 'tiger' ? .6 : 1, .4); ei.position.set(0, .08, .065); ear.add(ei);
+      if (kind === 'tiger') { ear.position.set(s * .3, .27, 0); ear.rotation.z = -s * .55; }
+    } else if (kind === 'dog') {                                  // 축 늘어진 귀
+      ear.position.set(s * .44, .1, -.02); ear.rotation.z = s * .35; ear.add(S(.14, accM, 0, -.06, 0, .6, 1.5, .9));
+    } else if (kind === 'pig') {
+      ear.position.set(s * .27, .33, .04); ear.rotation.set(.4, 0, -s * .4);
+      ear.add(new THREE.Mesh(new THREE.ConeGeometry(.12, .2, 16), accM));
+    } else if (kind === 'rabbit') {                               // 길쭉한 귀
+      ear.position.set(s * .15, .3, -.02); ear.rotation.z = -s * .12;
+      ear.add(S(.095, c.fur, 0, .3, 0, 1, 3.4, .6), S(.06, accM, 0, .3, .035, 1, 3, .3));
+    }                                                             // 물개·펭귄은 귀 없음
+  });
+  // 얼굴 (코·입·주둥이)
+  clear(c.face);
+  const F = (...o) => c.face.add(...o);
+  if (kind === 'cat' || kind === 'tiger') {
+    if (kind === 'tiger') F(S(.13, lightM, -.07, -.09, .33, 1, .8, .7), S(.13, lightM, .07, -.09, .33, 1, .8, .7));
+    F(S(.022, kind === 'tiger' ? M(0xff8fa8) : dark, 0, -.045, .396, 1.4, .8, .6));
+    [-1, 1].forEach(s => {                                        // ω 모양 입
+      const cv = new THREE.CatmullRomCurve3([V3(0, -.065, .394), V3(s * .03, -.1, .386), V3(s * .06, -.092, .382), V3(s * .075, -.072, .38)]);
+      F(new THREE.Mesh(new THREE.TubeGeometry(cv, 12, .008, 6), dark));
+    });
+    F(new THREE.Mesh(new THREE.TubeGeometry(new THREE.LineCurve3(V3(0, -.05, .396), V3(0, -.066, .394)), 2, .008, 6), dark));
+  } else if (kind === 'dog') {
+    F(S(.19, lightM, 0, -.1, .3, 1.2, .8, .85), S(.055, dark, 0, -.05, .45, 1.3, 1, 1));
+  } else if (kind === 'pig') {
+    const sn = new THREE.Mesh(new THREE.CylinderGeometry(.14, .15, .1, 20), accM); sn.rotation.x = Math.PI / 2; sn.position.set(0, -.08, .4); F(sn);
+    [-1, 1].forEach(s => F(S(.028, dark, s * .05, -.08, .455)));
+  } else if (kind === 'rabbit') {
+    F(S(.04, accM, 0, -.04, .4, 1.3, 1, 1));
+    const teeth = new THREE.Mesh(new THREE.BoxGeometry(.08, .07, .02), M(0xffffff, { roughness: .4 })); teeth.position.set(0, -.15, .37); F(teeth);
+  } else if (kind === 'seal') {                                   // 볼록한 주둥이와 수염
+    [-1, 1].forEach(s => F(S(.11, lightM, s * .08, -.11, .33, 1, .85, .8)));
+    F(S(.055, dark, 0, -.04, .42, 1.3, 1, 1));
+    [-1, 1].forEach(s => [-.02, .05].forEach(dy => { const w = new THREE.Mesh(new THREE.CylinderGeometry(.006, .006, .24, 6), dark); w.position.set(s * .24, -.11 + dy, .33); w.rotation.z = Math.PI / 2 + s * dy * 4; F(w); }));
+  } else if (kind === 'penguin') {                                // 주황 부리와 볼터치
+    const beak = new THREE.Mesh(new THREE.ConeGeometry(.075, .18, 16), accM); beak.rotation.x = Math.PI / 2; beak.position.set(0, -.07, .46); F(beak);
+    [-1, 1].forEach(s => F(S(.05, M(0xff9fb3), s * .23, -.08, .34, 1, .6, .4)));
+  }
+  // 꼬리 (꼬리 무리의 밑동은 몸 오른쪽 뒤 (.2, .14, -.28) → 몸 가운데는 x -.2)
+  c.tailParts.forEach(t => { c.tail.remove(t); t.traverse(o => o.geometry?.dispose()); });
+  const tp = [];
+  if (kind === 'cat' || kind === 'tiger') tp.push(new THREE.Mesh(new THREE.TubeGeometry(c.tailCurve, 40, .075, 14), c.fur), S(.075, kind === 'tiger' ? accM : c.fur, .36, .7, -.06));
+  else if (kind === 'dog') { const t = new THREE.Mesh(new THREE.CylinderGeometry(.04, .065, .32, 10), c.fur); t.position.set(-.2, .3, -.1); t.rotation.x = -.8; tp.push(t); }
+  else if (kind === 'pig') { const t = new THREE.Mesh(new THREE.TorusGeometry(.07, .022, 8, 16, Math.PI * 1.6), accM); t.position.set(-.2, .32, -.12); tp.push(t); }
+  else if (kind === 'rabbit') tp.push(S(.13, M(0xffffff), -.2, .28, -.1));
+  else if (kind === 'seal') tp.push(S(.14, accM, -.2, -.08, -.14, 1.7, .35, 1));
+  else if (kind === 'penguin') { const t = new THREE.Mesh(new THREE.ConeGeometry(.1, .2, 12), c.fur); t.position.set(-.2, -.02, -.12); t.rotation.x = -2; tp.push(t); }
+  tp.forEach(t => { t.castShadow = true; c.tail.add(t); });
+  c.tailParts.length = 0; c.tailParts.push(...tp);
+  c.g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+}
+// 캐릭터를 바꾸면 화면에 나온 모든 고양이(와 상점 그림용 고양이)의 겉모습을 바꿈
+function setChar(k) {
+  CLOSET.char = k; closetSave();
+  for (const c of [...LIVE_CATS, SHOP.tcat]) if (c) { catSkin(c); dressCat(c); }
+  for (const id in SHOP.thumbs) if (!id.startsWith('f_')) delete SHOP.thumbs[id];   // 옷 카드 그림은 새 모습으로 다시 그림
+  penCursor(); coverFriendsSync();
 }
 // ───────── 고양이 코스튬 (상점에서 사고, 옷장에서 입음) ─────────
 // 종류: hat 모자, top 겉옷, cloud 구름, gloves 장갑. 종류마다 10개, 위로 갈수록 간단·아래로 갈수록 화려
@@ -7183,7 +7268,7 @@ function dressCat(c, worn = CLOSET.worn) {
   if (c.titleSp) c.titleSp.position.y = worn.hat ? 2.0 : 1.72;
   for (const g of Object.values(c.cos)) g.traverse(o => { if (o.isMesh) o.castShadow = true; });
 }
-function dressAll() { for (const c of LIVE_CATS) dressCat(c); penCursor(); }
+function dressAll() { for (const c of LIVE_CATS) { catSkin(c); dressCat(c); } penCursor(); }
 // 게임 1·2의 고양이 연필 커서: 지금 쓴 모자를 그대로 (아무것도 안 썼으면 원래 그림 커서)
 function penCursor() {
   const w = CLOSET.worn, key = w.hat || '';
@@ -7313,7 +7398,7 @@ const HQ_ITEMS = new Set(Object.values(HQ_REWARD));
 const isHQ = it => HQ_ITEMS.has(it.id);
 const hqKind = it => FRIENDS.includes(it) ? '동물 친구' : TRAILS.includes(it) ? '효과' : '포즈';
 const hqItem = qid => HQ_REWARD[qid] ? itemById(HQ_REWARD[qid]) : null;
-const hqWhere = it => FRIENDS.includes(it) ? '옷장의 🐾 동물 친구에서 만나 보세요.' : TRAILS.includes(it) ? '옷장의 ✨ 효과에서 켜 보세요.' : '고양이를 더블클릭해서 해 보세요.';
+const hqWhere = it => FRIENDS.includes(it) ? '옷장의 🐾 동물 친구에서 변신해 보세요!' : TRAILS.includes(it) ? '옷장의 ✨ 효과에서 켜 보세요.' : '고양이를 더블클릭해서 해 보세요.';
 // 히든 퀘스트 보상을 줌 (퀘스트 창에서 동전을 받을 때). 새로 받은 것을 돌려줌 (silent가 아니면 알림도)
 function hqGrant(qid, silent) {
   const it = hqItem(qid);
@@ -7421,8 +7506,9 @@ function closetRender() {
   $('closetWorn').innerHTML = CLOSET_CATS.map(([k, nm, ic]) => `<span>${ic} ${CLOSET.worn[k] ? itemById(CLOSET.worn[k]).name : '없음'}</span>`).join('');
   SHOP.queue = [];
   const mine = gachaItems(SHOP.ctab).filter(it => CLOSET.owned[it.id]);
-  if (SHOP.ctab === 'friend') {                                   // 동물 친구: 입는 것이 아니라 모아 보기
-    $('closetGrid').innerHTML = mine.length ? mine.map(it => cosCard(it, '<button class="own" disabled>친구가 됐어요 💛</button>', false)).join('')
+  if (SHOP.ctab === 'friend') {                                   // 동물 친구: 골라서 내 캐릭터를 그 동물로 바꿈 (다시 누르면 고양이로)
+    const now = charKind();
+    $('closetGrid').innerHTML = mine.length ? mine.map(it => cosCard(it, `<button data-char="${it.k}" class="${now === it.k ? 'own' : ''}">${now === it.k ? '변신 중 ✓ (고양이로)' : '이 친구로 변신'}</button>`, now === it.k)).join('')
       : '<div class="shop-empty">아직 만난 동물 친구가 없어요.<br>히든 퀘스트를 깨면 동물 친구를 만날 수 있어요!</div>';
     fillThumbs($('closetGrid'));
     return;
@@ -7649,6 +7735,8 @@ function initShop() {
       $('gachaPop').classList.add('hidden'); toast(it.cat === 'trail' ? `✨ ${it.name} 효과를 켰어요! 고양이가 움직이면 보여요.` : `👗 ${it.name}을(를) 입었어요!`, '#18b981'); return;
     }
     if (e.target.closest('[data-gp-close]')) { $('gachaPop').classList.add('hidden'); return; }
+    const ch = e.target.closest('[data-char]');
+    if (ch) { setChar(charKind() === ch.dataset.char ? null : ch.dataset.char); closetRender(); return; }
     const wear = e.target.closest('[data-wear]');
     if (wear) {                                                 // 입기 / 벗기: 고양이가 나오는 모든 곳에 바로 적용
       const it = itemById(wear.dataset.wear);
@@ -10540,6 +10628,13 @@ function coverFriends() {
     const sh = coverShadow(.42, x, z); sc.add(sp, sh);
     return { sp, sh };
   });
+  coverFriendsSync();
+}
+// 내가 변신한 동물은 뒤쪽 친구들 사이에서 빼서 겹치지 않게
+function coverFriendsSync() {
+  const k = charKind(); (COVER.fr || []).forEach((f, i) => f.sp.visible = f.sh.visible = FRIENDS[i].k !== k);
+  const NP = { cat: '🐱 탐험대원 냥이', dog: '🐶 탐험대원 멍멍이', pig: '🐷 탐험대원 꿀꿀이', rabbit: '🐰 탐험대원 깡총이', tiger: '🐯 탐험대원 어흥이', seal: '🦭 탐험대원 물범이', penguin: '🐧 탐험대원 뒤뚱이' };
+  $('nameplate').textContent = NP[k];
 }
 // 2D 친구 그림 (SVG). 그림 좌표: 가로 100 · 세로 120, 머리 가운데 (50, 48), 몸통 가운데 (50, 88)
 function friendSvg(kind) {
@@ -10608,7 +10703,7 @@ function initCoverShapes() {
 if (window.THREE) {
   CYL = new THREE.CylinderGeometry(1, 1, 1, 14, 1);
   SPH = new THREE.SphereGeometry(1, 20, 14);
-  initExplore(); initPad(); initGames(); initExtras(); initVol(); initQuests(); initShop(); hqSync(); lockInit(); initChest(); initG3(); initCoverShapes(); initCoverCat(); coverFriends();
+  initExplore(); initPad(); initGames(); initExtras(); initVol(); initQuests(); initShop(); hqSync(); lockInit(); initChest(); initG3(); initCoverShapes(); initCoverCat(); coverFriends(); coverFriendsSync();
   loop();
 } else $('noThree').classList.remove('hidden');
 </script>
