@@ -74,8 +74,16 @@
   #hof th { position: sticky; top: 0; background: #5b4030; color: #fbe9c8; border: 0; padding: 6px; text-align: center; }
   #hof td { padding: 6px; border-bottom: 1px solid #e2d4b4; white-space: nowrap; text-align: center; font-weight: 600; }
   #hof tr:nth-child(even) td { background: #efe4c9; }
-  #hof tr.best td { background: #ffe6a6; }
-  #hof .rk { width: auto; color: #7a3a1a; font-weight: 800; }
+  #hof .hof-filter { display: flex; gap: 6px; margin: 4px 8px 0; }
+  #hof .hof-filter select {
+    flex: 1; min-width: 0; min-height: 34px; padding: 4px 8px; border-radius: 6px; font: inherit; font-size: .86rem; font-weight: 700;
+    color: #4a3426; background: #f5edd8; border: 2px solid #4a3426; cursor: pointer;
+  }
+  #hof .rk { width: auto; color: #000; font-weight: 800; }
+  /* 1·2·3등 순위 숫자: 금·회색·동색 */
+  #hof .rk.r1 { color: #c99700; }
+  #hof .rk.r2 { color: #6e7680; }
+  #hof .rk.r3 { color: #a8561e; }
   #hof .nm { white-space: normal; font-weight: 800; }
   #hof .tm { color: #2f2118; }
   #hof .rec-empty { margin: 0; padding: 14px 10px; text-align: center; color: #6b5442; font-size: .85rem; }
@@ -184,7 +192,7 @@
   .tool.on { border-color: var(--back); background: var(--back); color: #fff; }
   /* 도구 그림을 그 도구로 그린 선의 색으로 */
   .tool[data-tool="segment"]:not(.on) svg { color: #1fa45a; } .tool[data-tool="ray"]:not(.on) svg { color: #2aa7e6; }
-  .tool[data-tool="line"]:not(.on) svg { color: #e8b400; } .tool[data-tool="compass"]:not(.on) svg { color: #ff8a1d; }
+  .tool[data-tool="line"]:not(.on) svg { color: #e8b400; } .tool[data-tool="compass"]:not(.on) svg { color: #a66be0; }
   .toolbar .sep { width: 1px; align-self: stretch; background: var(--line); margin: 0 4px; }
   .toolbar .right { margin-left: auto; display: flex; gap: 6px; }
   .canvas-wrap {
@@ -396,6 +404,7 @@
   .play-pill.practice { background: #2f6fd6; }
   /* 연습 모드 안내: 지금 고를 도구를 주황색으로 반짝 */
   .tool.need { box-shadow: 0 0 0 3px #ff8a1d, 0 0 14px rgba(255,138,29,.6); animation: needGlow .9s ease-in-out infinite alternate; }
+  .tool.need, .tool.need:hover { background: repeating-linear-gradient(45deg, rgba(255,138,29,.3) 0 4px, transparent 4px 9px); }   /* 고를 도구 안에 주황 빗금 */
   @keyframes needGlow { from { box-shadow: 0 0 0 2px #ff8a1d, 0 0 4px rgba(255,138,29,.3); } to { box-shadow: 0 0 0 4px #ff8a1d, 0 0 16px rgba(255,138,29,.7); } }
   .hint-now.guide { background: #fff4e6; border-left-color: #ff8a1d; }
   .hint-now.guide b { color: #d96a00; }
@@ -480,7 +489,7 @@
           <span class="num">REAL</span>
           <h2>실전 모드</h2>
           <p>스스로 작도하고 채점해요.</p>
-          <ul><li>힌트는 문제마다 2번까지</li><li>문제를 2번씩 맞히면 다음 단계가 열려요</li></ul>
+          <ul><li>힌트는 문제마다 2번까지 (도전은 힌트 없음)</li><li>문제를 2번씩 맞히면 다음 단계가 열려요</li></ul>
         </span>
       </button>
     </div>
@@ -597,7 +606,7 @@
       <ul class="fb" id="feedback"></ul>
       <button class="retry hidden" id="retry">↻ 새 문제</button>
     </div>
-    <div class="card hints">
+    <div class="card hints" id="hintCard">
       <h3 id="hintTitle">💡 힌트</h3>
       <div id="hintBox"></div>
     </div>
@@ -664,8 +673,8 @@ let prob = null;          // 현재 문제
 let S = null;             // 작도 상태 { points, objs, nextId, labelIdx }
 let history = [];
 let tool = 'segment';
-// 학생이 그린 선·호의 색: 호 주황, 선분 초록, 반직선 하늘, 직선 노랑
-const DRAW_COL = { compass: '#ff8a1d', segment: '#1fa45a', ray: '#2aa7e6', line: '#e8b400' };
+// 학생이 그린 선·호의 색: 호 보라, 선분 초록, 반직선 하늘, 직선 노랑
+const DRAW_COL = { compass: '#a66be0', segment: '#1fa45a', ray: '#2aa7e6', line: '#e8b400' };
 let pending = [];         // 선분/반직선/직선 도구에서 고른 점
 let compass = { stage: 0, a: null, b: null, r: 0, c: null, sweep: null };
 let cursor = null;        // 현재 손가락/펜 위치(스냅 결과)
@@ -848,6 +857,14 @@ function renderVariants() {
 // 도전: SSS → SAS → ASA 세 문제를 이어서 풂 (chalStep: 지금 몇 번째, chalKeep: 다음 문제로 넘어가는 중이면 타이머를 이어 감)
 const CHAL_KINDS = ['sss', 'sas', 'asa'];
 let chalStep = 0, chalKeep = false;
+// 도전에는 [새 문제]와 [힌트]가 없음 (힌트 칸도 실전 도전에서는 숨김, 연습 모드의 작도 순서 안내는 그대로)
+function syncButtons() {
+  const ch = mode === 'challenge';
+  $('hint').classList.toggle('hidden', play === 'practice' || ch);
+  $('newProb').classList.toggle('hidden', ch);
+  $('hintCard').classList.toggle('hidden', ch && play !== 'practice');
+  $('retry').textContent = ch ? '↻ 다시 도전' : '↻ 새 문제';
+}
 function makeProblem() {
   const keep = chalKeep; chalKeep = false;
   if (!keep) chalStep = 0;
@@ -941,6 +958,7 @@ function makeProblem() {
   $('taskTag').textContent = mode === 'challenge' ? `도전 ${chalStep + 1}/3` : play === 'practice' ? '연습' : '문제';
   if (mode === 'challenge') { if (!keep) startChallenge(); }   // 도전: 세 문제를 다 풀 때까지 이어서 잼
   else { stopTimer(); $('timer').classList.add('hidden'); }
+  syncButtons();
   $('task').textContent = prob.task;
   renderVariants(); clearHint(); hideResult(); updateStatus(); draw();
 }
@@ -1259,7 +1277,7 @@ function showResult(score, items) {
           const { ms, at } = finishChallenge(), recs = loadRecords().filter(r => r.kind === 'set' && (r.play || 'real') === play).sort((a, b) => a.ms - b.ms);
           const rank = recs.findIndex(r => r.at === at) + 1;
           items.unshift({ ok: true, text: `🏆 도전 3문제 모두 성공! 걸린 시간 <b>${fmtTime(ms)}</b> · <b>${rank}위</b> (${play === 'practice' ? '연습' : '실전'} 모드 기록 ${recs.length}개 중)${chalRankTable(recs, at)}` });
-        } else items.unshift({ ok: true, text: '🏆 도전 3문제(SSS·SAS·ASA)를 모두 성공했어요! [새 문제]로 다시 도전해 보세요.' });
+        } else items.unshift({ ok: true, text: '🏆 도전 3문제(SSS·SAS·ASA)를 모두 성공했어요! [다시 도전]을 눌러 보세요.' });
       }
       if (!solvedThis) {
         solvedThis = true; solved[mode] = (solved[mode] || 0) + 1; renderTabs();
@@ -1494,7 +1512,7 @@ function renderHintBtn() {
   $('hint').disabled = left <= 0;
 }
 function showHint() {
-  if (hintsUsed >= HINT_MAX) return;
+  if (hintsUsed >= HINT_MAX || mode === 'challenge') return;
   hintsUsed++; renderHintBtn();
   const plan = buildPlan(), wrong = findWrong(plan);
   let html;
@@ -1994,18 +2012,26 @@ function hofMs(t) {                                              // 기록 글�
   const m = s.match(/(?:(\d+)\s*분)?\s*([\d.]+)?\s*초?/);
   return m ? ((+m[1] || 0) * 60 + (parseFloat(m[2]) || 0)) * 1000 : Infinity;
 }
+let hofYear = '', hofClass = '';                                 // 명예의 전당 필터 ('': 전체)
 function renderHof() {
-  const list = HALL_OF_FAME.map(r => ({ ...r, ms: hofMs(r.기록) })).sort((a, b) => a.ms - b.ms);
+  const all = HALL_OF_FAME.map(r => ({ ...r, ms: hofMs(r.기록) }));
+  const opts = key => [...new Set(all.map(r => String(r[key] ?? '')).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ko', { numeric: true }));
+  const sel = (id, label, vals, cur) => `<select id="${id}" aria-label="${label}"><option value="">${label} 전체</option>${
+    vals.map(v => `<option value="${v}"${v === cur ? ' selected' : ''}>${v}${id === 'hofYear' ? '년' : '반'}</option>`).join('')}</select>`;
+  // 고른 연도·반에 맞는 학생만 남기고, 그 안에서 빠른 순으로 순위를 매김
+  const list = all.filter(r => (!hofYear || String(r.연도) === hofYear) && (!hofClass || String(r.반) === hofClass)).sort((a, b) => a.ms - b.ms);
   const tm = r => isFinite(r.ms) ? fmtTime(r.ms) : (r.기록 ?? '');
   const rows = list.map((r, i) => `
-    <tr${i === 0 ? ' class="best"' : ''}>
-      <td class="rk">${i + 1}위</td>
+    <tr>
+      <td class="rk${i < 3 ? ' r' + (i + 1) : ''}">${i + 1}위</td>
       <td>${r.연도 ?? ''}</td><td>${r.반 ?? ''}</td><td class="nm">${r.이름 ?? ''}</td>
       <td class="tm">${tm(r)}</td>
     </tr>`).join('');
   $('hof').innerHTML = `<h3>명예의 전당</h3>
+    ${all.length ? `<div class="hof-filter">${sel('hofYear', '연도', opts('연도'), hofYear)}${sel('hofClass', '반', opts('반'), hofClass)}</div>` : ''}
     <div class="list">${list.length
       ? `<table><thead><tr><th>순위</th><th>연도</th><th>반</th><th>이름</th><th>기록</th></tr></thead><tbody>${rows}</tbody></table>`
+      : all.length ? `<p class="rec-empty">이 조건에 맞는 학생이 없어요.</p>`
       : `<p class="rec-empty">아직 이름을 올린 학생이 없어요.<br>도전에서 가장 빠른 기록을 세워 이름을 올려 보세요!</p>`}</div>`;
 }
 
@@ -2134,7 +2160,7 @@ function choosePlay(p) {
   $('playPill').textContent = p === 'practice' ? '✏️ 연습 모드 — 작도하는 방법을 하나하나 알려 줘요' : '🎯 실전 모드 — 스스로 작도하고 채점해요';
   $('playPill').classList.toggle('practice', p === 'practice');
   $('cover').classList.toggle('no-side', p === 'practice');           // 도전 기록은 실전 모드에서만 (연습 모드는 단계 카드만 넓게)
-  $('hint').classList.toggle('hidden', p === 'practice');
+  syncButtons();
   $('hintTitle').textContent = p === 'practice' ? '🧭 작도 순서 안내' : '💡 힌트';
   if (p !== 'practice') clearGuideTools();
   renderCover();
@@ -2152,6 +2178,12 @@ function goCover() {
   $('app').classList.add('hidden'); $('cover').classList.remove('hidden');
   renderCover();
 }
+$('hof').addEventListener('change', e => {
+  if (e.target.id === 'hofYear') hofYear = e.target.value;
+  else if (e.target.id === 'hofClass') hofClass = e.target.value;
+  else return;
+  renderHof();
+});
 $('records').addEventListener('click', e => {
   if (e.target.id === 'clearRec' && confirm('도전 기록을 모두 지울까요? 되돌릴 수 없어요.')) { saveRecords([]); renderRecords(); }
 });
@@ -2194,8 +2226,7 @@ $('tabs').addEventListener('click', e => {
 document.querySelectorAll('.tool').forEach(b => b.addEventListener('click', () => setTool(b.dataset.tool === tool ? null : b.dataset.tool)));
 $('undo').addEventListener('click', undo);
 $('clear').addEventListener('click', clearAll);
-// 새 문제: 도전 중이면 처음으로 돌아가지 않고 지금 단계(같은 유형)의 다른 문제로, 타이머도 그대로 (3문제를 다 푼 뒤에는 처음부터)
-$('newProb').addEventListener('click', () => { if (mode === 'challenge' && chal.running) chalKeep = true; makeProblem(); });
+$('newProb').addEventListener('click', () => { if (mode !== 'challenge') makeProblem(); });   // 도전에는 새 문제 버튼이 없음
 $('variants').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   variant = +b.dataset.v; makeProblem();
