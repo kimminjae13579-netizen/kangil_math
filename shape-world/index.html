@@ -524,6 +524,7 @@
   .q-item.hidden-q b { color: #ff9a3d; }
   .q-item.hidden-q small { color: #a99fd6; }
   .q-item.hidden-q .st { background: #2e2650; color: #ff9a3d; }
+  .q-item .q-rw { display: block; margin-top: 3px; font-style: normal; font-size: .82rem; font-weight: 700; color: #ff7ac0; }
   .q-item.hidden-q.done { background: #111; border-color: #ff8a1d; box-shadow: 0 0 0 2px rgba(255,138,29,.25), 0 3px 0 #000; }
   .q-item.hidden-q.done .ic { background: radial-gradient(circle, #ffb05a, #ff7a00); }
   .q-item.hidden-q.done .st { background: #ff8a1d; color: #111; }
@@ -5525,8 +5526,13 @@ const unclaimed = (s, list = QUESTS) => list.filter(q => s.done[q.id] && !isPaid
 function claimQuests(list) {
   CLOSET.paid = CLOSET.paid || {};
   let n = 0;
-  for (const q of list) if (!isPaid(q.id)) { CLOSET.paid[q.id] = 1; n += questCoin(q); }
+  const got = [];                                                 // 함께 받은 히든 퀘스트 보상
+  for (const q of list) if (!isPaid(q.id)) {
+    CLOSET.paid[q.id] = 1; n += questCoin(q);
+    const it = hqGrant(q.id, true); if (it) got.push(it);
+  }
   if (n) addCoins(n);
+  if (got.length) setTimeout(() => toast(`🎁 히든 퀘스트 보상! ${got.map(it => `${hqKind(it)} 「${it.name}」`).join(', ')}을(를) 얻었어요! ${hqWhere(got[0])}`, '#ff4fa0', true), 300);
   return n;
 }
 function qDone(id) {
@@ -5534,8 +5540,7 @@ function qDone(id) {
   if (s.done[id]) return;
   const q = QUESTS.find(x => x.id === id);
   if (!q) return;
-  s.done[id] = Date.now(); qStore(s);
-  hqGrant(id);                                                    // 히든 퀘스트 보상 (동물 친구·효과·포즈)
+  s.done[id] = Date.now(); qStore(s);                             // 히든 퀘스트 보상은 퀘스트 창에서 동전을 받을 때 함께 줌
   qPopQ.push(q);
   if (qPopQ.length === 1) qPopShow();
   qRefresh();
@@ -5724,7 +5729,8 @@ function qPopShow() {
   el.classList.toggle('hid', !!q.hidden);
   el.querySelector('.pi').innerHTML = qIcon(q);
   el.querySelector('b').textContent = q.hidden ? '히든 퀘스트 완료!' : '퀘스트 완료!';
-  el.querySelector('span').textContent = `${q.t} · 🪙 ${questCoin(q)}`;
+  const rw = hqItem(q.id);
+  el.querySelector('span').textContent = `${q.t} · 🪙 ${questCoin(q)}${rw ? ` · 🎁 ${rw.name}` : ''}`;
   el.classList.remove('run'); void el.offsetWidth; el.classList.add('run');
   el.onanimationend = () => {
     el.classList.remove('run'); qPopQ.shift();
@@ -5767,11 +5773,13 @@ function qRender() {
       : q.goal ? `<div class="q-mini-bar"><i style="width:${Math.min(1, (s.prog[q.id] || 0) / q.goal) * 100}%"></i></div>${s.prog[q.id] || 0}/${q.goal}`
       : secret ? '🪙 ???' : `🪙 ${questCoin(q)}`;            // 아직 못 깬 퀘스트는 받을 동전을 보여 줌
     // 깬 퀘스트의 동전을 아직 안 받았으면 [🪙 받기] 버튼
-    const claim = done && !isPaid(q.id) ? `<button class="q-claim" data-claim="${q.id}">🪙 ${questCoin(q)} 받기</button>` : '';
+    const rw = hqItem(q.id);                                      // 히든 퀘스트 보상 (깨면 무엇인지 보여 줌)
+    const claim = done && !isPaid(q.id) ? `<button class="q-claim" data-claim="${q.id}">🪙 ${questCoin(q)}${rw ? ' + 🎁' : ''} 받기</button>` : '';
     const stHtml = claim || `<span class="st">${st}</span>`;
+    const rwHtml = rw && !secret ? `<em class="q-rw">🎁 보상: ${hqKind(rw)} 「${rw.name}」${done && isPaid(q.id) ? ' ✓' : ''}</em>` : '';
     return `<div class="q-item ${done ? 'done' : ''} ${q.hidden ? 'hidden-q' : ''}">
       <span class="ic">${secret ? '❓' : qIcon(q)}</span>
-      <span class="tx"><b>${secret ? '히든 퀘스트' : q.t}</b><small>${secret ? '조건은 비밀! 이것저것 해 보면 찾을 수 있어요.' : q.d}</small></span>
+      <span class="tx"><b>${secret ? '히든 퀘스트' : q.t}</b><small>${secret ? '조건은 비밀! 이것저것 해 보면 찾을 수 있어요.' : q.d}</small>${rwHtml}</span>
       ${stHtml}
     </div>`;
   }).join('');
@@ -7304,16 +7312,21 @@ const HQ_REWARD = {
 const HQ_ITEMS = new Set(Object.values(HQ_REWARD));
 const isHQ = it => HQ_ITEMS.has(it.id);
 const hqKind = it => FRIENDS.includes(it) ? '동물 친구' : TRAILS.includes(it) ? '효과' : '포즈';
-// 히든 퀘스트를 깬 순간 보상을 줌 (silent: 예전에 이미 깬 퀘스트는 알림 없이)
+const hqItem = qid => HQ_REWARD[qid] ? itemById(HQ_REWARD[qid]) : null;
+const hqWhere = it => FRIENDS.includes(it) ? '옷장의 🐾 동물 친구에서 만나 보세요.' : TRAILS.includes(it) ? '옷장의 ✨ 효과에서 켜 보세요.' : '고양이를 더블클릭해서 해 보세요.';
+// 히든 퀘스트 보상을 줌 (퀘스트 창에서 동전을 받을 때). 새로 받은 것을 돌려줌 (silent가 아니면 알림도)
 function hqGrant(qid, silent) {
-  const it = HQ_REWARD[qid] && itemById(HQ_REWARD[qid]);
-  if (!it || CLOSET.owned[it.id]) return;
+  const it = hqItem(qid);
+  if (!it || CLOSET.owned[it.id]) return null;
   CLOSET.owned[it.id] = true; closetSave();
-  if (!silent) setTimeout(() => toast(`🎁 히든 퀘스트 보상! ${hqKind(it)} 「${it.name}」을(를) 얻었어요!`, '#ff4fa0', true), 1200);
+  if (!silent) setTimeout(() => toast(`🎁 히든 퀘스트 보상! ${hqKind(it)} 「${it.name}」을(를) 얻었어요! ${hqWhere(it)}`, '#ff4fa0', true), 1200);
+  return it;
 }
-function hqSync() { const s = qLoad(); for (const id in HQ_REWARD) if (s.done[id]) hqGrant(id, true); }
+// 동전을 이미 받은 히든 퀘스트의 보상이 빠져 있으면 채워 줌
+function hqSync() { const s = qLoad(); for (const id in HQ_REWARD) if (s.done[id] && isPaid(id)) hqGrant(id, true); }
 const SHOP_CATS = [...COS_CATS, ['friend', '동물 친구', '🐾'], ['trail', '효과', '✨'], ['pose', '포즈', '💃']];
 const CLOSET_CATS = [...COS_CATS, ['trail', '효과', '✨']];       // 옷장: 옷 + 이동 효과 (켜기·끄기)
+const CLOSET_TABS = [...CLOSET_CATS, ['friend', '동물 친구', '🐾']];   // 옷장 탭: + 히든 퀘스트로 만난 동물 친구 (모아 보기)
 const gachaItems = cat => cat === 'pose' ? POSES : cat === 'trail' ? TRAILS : cat === 'friend' ? FRIENDS : COSTUMES.filter(it => it.cat === cat);
 const itemById = id => cosById(id) || POSES.find(q => q.id === id) || TRAILS.find(q => q.id === id) || FRIENDS.find(q => q.id === id);
 const gachaUnit = cat => cat === 'friend' ? '친구' : cat === 'pose' ? '포즈' : cat === 'trail' ? '효과' : '옷';
@@ -7404,10 +7417,16 @@ function gachaPull(cat) {
 }
 function closetRender() {
   $('closetCoins').textContent = `🪙 ${CLOSET.coins}`;
-  cosTabs($('closetTabs'), SHOP.ctab, CLOSET_CATS);
+  cosTabs($('closetTabs'), SHOP.ctab, CLOSET_TABS);
   $('closetWorn').innerHTML = CLOSET_CATS.map(([k, nm, ic]) => `<span>${ic} ${CLOSET.worn[k] ? itemById(CLOSET.worn[k]).name : '없음'}</span>`).join('');
   SHOP.queue = [];
   const mine = gachaItems(SHOP.ctab).filter(it => CLOSET.owned[it.id]);
+  if (SHOP.ctab === 'friend') {                                   // 동물 친구: 입는 것이 아니라 모아 보기
+    $('closetGrid').innerHTML = mine.length ? mine.map(it => cosCard(it, '<button class="own" disabled>친구가 됐어요 💛</button>', false)).join('')
+      : '<div class="shop-empty">아직 만난 동물 친구가 없어요.<br>히든 퀘스트를 깨면 동물 친구를 만날 수 있어요!</div>';
+    fillThumbs($('closetGrid'));
+    return;
+  }
   $('closetGrid').innerHTML = mine.length ? mine.map(it => {
     const on = CLOSET.worn[it.cat] === it.id;
     return cosCard(it, `<button data-wear="${it.id}" class="${on ? 'own' : ''}">${it.cat === 'trail' ? (on ? '켜는 중 ✓ (끄기)' : '켜기') : on ? '입는 중 ✓ (벗기)' : '입기'}</button>`, on);
