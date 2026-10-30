@@ -898,6 +898,11 @@
   .gp-card h3 { margin: 6px 0 2px; font-family: "Jua", sans-serif; font-weight: 400; font-size: 1.7rem; }
   .gp-card .gp-grade { font-size: 1.4rem; }
   .gp-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+  /* 히든 퀘스트 추가 보상 창 (여러 개면 나란히, 화면이 좁으면 줄바꿈) */
+  .hq-cards { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; max-height: 78vh; overflow-y: auto; padding: 6px; }
+  .hq-card { width: min(270px, 80vw); }
+  .hq-card .hq-from { font-size: .9rem; font-weight: 800; color: #7a4dff; margin: 2px 0 8px; }
+  .hq-card .hq-kind { display: inline-block; font-family: "Jua", sans-serif; font-size: .95rem; color: #fff; background: #ff4fa0; border-radius: 999px; padding: 2px 12px; margin-bottom: 6px; }
   @media (max-width: 700px) { .gacha-top { grid-template-columns: 1fr; } .gm-dome { width: 84px; height: 84px; } }
   /* 갤러리 */
   .modal-box.wide { width: min(820px, 100%); }
@@ -5529,11 +5534,26 @@ function claimQuests(list) {
   const got = [];                                                 // 함께 받은 히든 퀘스트 보상
   for (const q of list) if (!isPaid(q.id)) {
     CLOSET.paid[q.id] = 1; n += questCoin(q);
-    const it = hqGrant(q.id, true); if (it) got.push(it);
+    const it = hqGrant(q.id, true); if (it) got.push([q, it]);
   }
   if (n) addCoins(n);
-  if (got.length) setTimeout(() => toast(`🎁 히든 퀘스트 보상! ${got.map(it => `${hqKind(it)} 「${it.name}」`).join(', ')}을(를) 얻었어요! ${hqWhere(got[0])}`, '#ff4fa0', true), 300);
+  if (got.length) setTimeout(() => hqRewardPop(got), 250);       // 받은 추가 보상을 화면 가운데 창으로 보여 줌
   return n;
+}
+// 히든 퀘스트 추가 보상 창: 뽑기 결과처럼 화면 가운데에 보상 카드 (여러 개면 나란히). [확인]으로 닫음
+function hqRewardPop(got) {
+  const res = $('gpResult');
+  $('gpCapsule').className = 'gp-capsule hidden';
+  res.innerHTML = `<div class="hq-cards">${got.map(([q, it]) => `<div class="gp-card hidden-g hq-card">
+      <div class="gp-kind">🎁 히든 퀘스트 보상!</div>
+      <div class="hq-from">「${q.t}」</div>
+      <img src="${cosThumb(it)}" alt=""><h3>${it.name}</h3>
+      <div class="hq-kind">${hqKind(it)}</div>
+      <div class="gacha-note">${hqWhere(it)}</div>
+      ${TRAILS.includes(it) ? `<div class="gp-btns"><button data-gp-wear="${it.id}">✨ 바로 켜기</button></div>` : ''}
+    </div>`).join('')}</div>
+    <div class="gp-btns"><button class="ghost" data-gp-close>확인</button></div>`;
+  res.classList.remove('hidden'); $('gachaPop').classList.remove('hidden');
 }
 function qDone(id) {
   const s = qLoad();
