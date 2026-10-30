@@ -2037,10 +2037,11 @@ function renderHof() {
 
 // ───────── 화면 전환 ─────────
 function $(id) { return document.getElementById(id); }
+const playModes = () => play === 'practice' ? MODES.filter(m => m.id !== 'challenge') : MODES;   // 연습 모드에는 도전이 없음
 function renderCover() {
   renderRecords();
   renderHof();
-  $('modeGrid').innerHTML = MODES.map((m, i) => `
+  $('modeGrid').innerHTML = playModes().map((m, i) => `
     <button class="mode-card ${m.id === 'challenge' ? 'challenge' : ''} ${isLocked(m.id) ? 'locked' : ''}" data-mode="${m.id}" style="--c:${m.c};--cbg:${m.cbg}">
       <span class="ic"><svg viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-linecap="round">${m.icon}</svg>${solved[m.id] ? `<span class="done">${solved[m.id]}개 완료</span>` : ''}</span>
       <span>
@@ -2053,7 +2054,7 @@ function renderCover() {
     </button>`).join('');
 }
 function renderTabs() {
-  $('tabs').innerHTML = MODES.map(m =>
+  $('tabs').innerHTML = playModes().map(m =>
     `<button data-mode="${m.id}" class="${m.id === mode ? 'on' : ''} ${isLocked(m.id) ? 'locked' : ''}">${isLocked(m.id) ? '🔒 ' : ''}${m.name}${solved[m.id] ? `<small>${solved[m.id]}</small>` : ''}</button>`).join('');
 }
 // ───────── 잠금과 코드 ─────────
