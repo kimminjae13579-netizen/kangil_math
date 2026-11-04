@@ -7677,7 +7677,8 @@ const CODES = [
   ['🔒 잠금', '8338', '모두 잠그기', () => lockSetCode(Object.keys(LOCKS), 'closed')],
   ['🔒 잠금', '1722', '잠금 원래대로 (조건을 이룬 것만 열림)', () => lockSetCode(Object.keys(LOCKS), null)],
   ...[['tiles', '1288', '타일 테트리스'], ['circle', '5966', '2D 도형 세계의 원'], ['cards', '9733', '카드 짝 맞추기'], ['pizza', '0138', '고양이 피자 가게'], ['w3d', '7828', '3D 세계'],
-    ['game1', '6570', '회전체 탐정단'], ['game2', '4788', '빙글빙글 회전 화가'], ['rev', '9919', '3D 도형 세계의 회전체'], ['lab', '0615', '아르키메데스 실험실'], ['game3', '0419', '딱 맞춰 붓기 대작전']]
+    ['game1', '6570', '회전체 탐정단'], ['game2', '4788', '빙글빙글 회전 화가'], ['rev', '9919', '3D 도형 세계의 회전체'], ['lab', '0615', '아르키메데스 실험실'], ['game3', '0419', '딱 맞춰 붓기 대작전'],
+    ['cut2d', '4471', '다각형 자르기']]
     .map(([k, c, nm]) => ['🔒 잠금', c, `「${nm}」 잠금 풀기`, () => lockSetCode([k], 'open')]),
   ['🏅 칭호', '6357', '모든 칭호 받기', () => titleAll()],
   ['🏅 칭호', '0159', '받은 칭호 모두 초기화', () => titleReset()],
@@ -9277,7 +9278,7 @@ function flShapeMenu(b) {
     if (p.cut) h = b('rejoin', '↺ 다시 붙이기');
     else if (p.n >= 4 && p.diag.size === p.n * (p.n - 3) / 2) h = b('clrd', '↺ 되돌리기');   // 대각선을 모두 그었으면 되돌리기만
     else h = b('diag', p.diagMode ? '✏️ 대각선 표시하기 끄기' : '✏️ 대각선 표시하기', p.diagMode) + b('int', '📐 내각 표시', p.intOn) + b('ext', '↗️ 외각 표시', p.extOn)
-      + (p.cutV != null ? '<hr>' + b('cut', '✂️ 자르기') : '') + (p.diag.size ? b('clrd', '🧹 대각선 지우기') : '');
+      + (p.cutV != null && isOpen('cut2d') ? '<hr>' + b('cut', '✂️ 자르기') : '') + (p.diag.size ? b('clrd', '🧹 대각선 지우기') : '');
   } else if (FL.kind === 'circle' && FL.circ && FL.circ.fixed) {
     const c = FL.circ;
     if (c.pieces) h = b('rejoin', '↺ 다시 붙이기');
@@ -9294,7 +9295,7 @@ function flAct(a, arg) {
     p.extOn = !p.extOn; if (!p.extOn) { p.s = 1; $('flShrinkIn').value = 100; $('flShrinkV').textContent = '100%'; }
     $('flShrink').classList.toggle('hidden', !p.extOn); flPolyDraw();
   }
-  if (a === 'cut') flLaserCut();
+  if (a === 'cut' && isOpen('cut2d')) flLaserCut();
   if (a === 'clrd') { FL.brushQ = []; FL.brush = null; flClear(FL.beams); p.diag.clear(); p.allDone = false; p.cutV = null; p.lastV = null; p.diagMode = false; p.first = null; flPolyDraw(); }   // 대각선 그리기도 끔
   if (a === 'rejoin') { if (p) { p.cut = null; p.diag.clear(); p.allDone = false; p.cutV = null; p.lastV = null; p.diagMode = false; p.first = null; flPolyDraw(); } if (c) { c.pieces = null; flCircDraw(); } }   // 다시 붙이면 대각선 표시도 지움
   if (a === 'fall') { flClearAll(); return; }
@@ -10251,6 +10252,9 @@ const LOCKS = {
     need: () => `회전체 탐정단과 빙글빙글 회전 화가를 각각 3번씩 하면 열려요. (지금 ${Math.min(3, playN('g1'))} / 3번, ${Math.min(3, playN('g2'))} / 3번)` },
   lab: { nm: '아르키메데스 실험실', ok: () => ['r_sv_cyl', 'r_sv_cone', 'r_sv_sph'].every(qd), need: () => '원기둥·원뿔·구의 겉넓이와 부피 확인하기 퀘스트를 모두 깨면 열려요.' },
   game3: { nm: '딱 맞춰 붓기 대작전', ok: () => catAll(qLoad(), 'rev'), need: () => '「회전체」 일반 퀘스트를 모두 깨면 열려요.' },
+  // 2D 다각형 자르기: 잠겨 있으면 메뉴에 [자르기]가 아예 안 보임
+  cut2d: { nm: '다각형 자르기', ok: () => [4, 5, 6, 7].every(n => qd('d_all_' + n)), need: () => '「모든 대각선 표시하기」 퀘스트 4개를 모두 깨면 열려요.',
+    msg: '✂️ 대각선 그리기 퀘스트를 모두 깼어요! 이제 다각형 [자르기] 기능을 쓸 수 있어요.' },
 };
 // 선생님 코드로 정한 잠금 (CLOSET.lockSet[k]: 'open' 강제로 열기, 'closed' 강제로 잠그기, 없으면 조건대로)
 const isOpen = k => { if (!LOCKS[k]) return true; const f = (CLOSET.lockSet || {})[k]; return f === 'open' ? true : f === 'closed' ? false : LOCKS[k].ok(); };
@@ -10274,7 +10278,7 @@ function lockUI() {
 // 새로 열린 것이 있으면 알림 (silent: 앱을 열 때 이미 열려 있던 것은 알리지 않음)
 function lockCheck(silent) {
   CLOSET.opened = CLOSET.opened || {}; let ch = false;
-  for (const k in LOCKS) if (isOpen(k) && !CLOSET.opened[k]) { CLOSET.opened[k] = 1; ch = true; if (!silent) toast(`🔓 「${LOCKS[k].nm}」이(가) 열렸어요!`, '#18b981', true); }
+  for (const k in LOCKS) if (isOpen(k) && !CLOSET.opened[k]) { CLOSET.opened[k] = 1; ch = true; if (!silent) toast(LOCKS[k].msg || `🔓 「${LOCKS[k].nm}」이(가) 열렸어요!`, '#18b981', true); }
   if (ch) closetSave();
   lockUI();
 }
@@ -10292,7 +10296,10 @@ document.addEventListener('click', e => {
   toast('🔒 ' + el.dataset.lockMsg, '#7a4dff', true);
 }, true);
 // ── 🎁 보물상자: 2D·3D 도형 세계에 4분마다 하나씩 내려옴 (최대 3개). 고양이가 가까이 가면 문제, 맞히면 동전 10~15 ──
-// 문제는 하~중 난이도, 답은 자연수 (π가 붙는 답은 π 앞의 수를 누름). 2D: 다각형(+원이 열리면 원·부채꼴), 3D: 다면체·정다면체(+회전체가 열리면 회전체)
+// 문제는 하~중 난이도, 답은 자연수 (π가 붙는 답은 π 앞의 수를 누름)
+// 2D: 「원」이 열려야 상자가 내려옴 → 다각형 문제 (+「카드 짝 맞추기」가 열리면 원·부채꼴 문제도)
+// 3D: 「회전체」가 열려야 상자가 내려옴 → 다면체·정다면체 문제 (+「아르키메데스 실험실」이 열리면 회전체 문제도)
+const CHEST_OPEN = { '2d': 'circle', '3d': 'rev' }, CHEST_MORE = { '2d': 'cards', '3d': 'lab' };
 const RI = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 const PK = a => a[Math.floor(Math.random() * a.length)];
 const CHEST_Q = {
@@ -10345,7 +10352,7 @@ const CHEST_Q = {
   ],
 };
 function chestQuestion(w) {
-  const cats = w === '2d' ? ['poly', ...(isOpen('circle') ? ['circ'] : [])] : ['poly3', ...(isOpen('rev') ? ['rev'] : [])];
+  const more = isOpen(CHEST_MORE[w]), cats = w === '2d' ? ['poly', ...(more ? ['circ'] : [])] : ['poly3', ...(more ? ['rev'] : [])];
   return PK(CHEST_Q[PK(cats)])();
 }
 const CHEST_EVERY = 240, CHEST_MAX = 3;                               // 4분마다, 최대 3개
@@ -10395,7 +10402,7 @@ function chestTap(w, ndc) {
 function chestTick(w) {
   const C = CH[w], E = chestEnv(w), now = performance.now(), dt = Math.min(.1, (now - (C.last || now)) / 1000); C.last = now;
   if (!E || $(E.scr).classList.contains('hidden')) return;
-  C.t += dt;
+  if (isOpen(CHEST_OPEN[w])) C.t += dt;                           // 잠겨 있으면 상자가 내려오지 않음 (시간도 세지 않음)
   if (C.t >= CHEST_EVERY) { C.t = 0; chestDrop(w); }
   const cp = E.cat.g.position, t = now / 1000;
   for (const ch of C.list) {
