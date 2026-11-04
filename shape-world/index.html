@@ -269,6 +269,12 @@
   .rec-tbl tr:nth-child(2) td, .rec-tbl tr:nth-child(3) td, .rec-tbl tr:nth-child(4) td { font-weight: 800; }
   .rec-tbl td.big { font-family: "Jua", sans-serif; font-size: 1.1rem; color: #3b22a6; }
   .rec-empty { text-align: center; color: var(--muted); padding: 30px 10px; }
+  /* 업데이트 소식 창 */
+  .modal-box.upd-box { width: min(620px, 100%); background: #fff8ef; }
+  .upd-wrap { max-height: 62vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+  .upd-item { background: #fff; border: 2px solid #f0e2cc; border-radius: 16px; padding: 14px 18px; }
+  .upd-item h3 { margin: 0 0 8px; font-family: "Jua", sans-serif; font-weight: 400; font-size: 1.25rem; color: #3b22a6; }
+  .upd-item ul { margin: 0; padding-left: 1.2em; line-height: 1.7; }
   @media (max-width: 860px), (orientation: portrait) { .tt-main { grid-template-columns: 1fr; height: auto; } .tt-stage { min-height: 62vh; } }
   .pz-main { flex: 1; min-height: 0; display: flex; padding: 12px; gap: 12px; }
   .pz-memo { width: 290px; flex: none; display: flex; flex-direction: column; gap: 6px; background: #fff; border: 4px solid #fff; border-radius: 22px; padding: 10px; box-shadow: 0 8px 0 rgba(40,20,140,.3); }
@@ -1068,7 +1074,7 @@
 
 <!-- ───────── 표지 ───────── -->
 <div class="cover intro" id="cover">
-  <div class="cover-chips"><span class="coin-chip">🪙 0</span><button class="title-chip" data-records title="기록표">🏆 기록표</button></div>
+  <div class="cover-chips"><span class="coin-chip">🪙 0</span><button class="title-chip" data-records title="기록표">🏆 기록표</button><button class="title-chip" data-updates title="업데이트 소식">📢 업데이트</button></div>
   <!-- 오른쪽 위: 퀘스트 · 상점 · 옷장 · 설정(톱니바퀴)을 한 줄로 -->
   <div class="cover-side">
   <button class="gear" data-settings aria-label="설정" title="설정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
@@ -1690,6 +1696,13 @@
     <h2>보물상자를 열었어요!</h2>
     <div class="rw-coin" id="chestRwCoin"></div>
     <button class="gacha-go" id="chestRwOk" style="margin-top:14px">확인</button>
+  </div>
+</div>
+<!-- 업데이트 소식 (내용은 스크립트의 UPDATES) -->
+<div class="modal hidden" id="updModal">
+  <div class="modal-box upd-box">
+    <div class="shop-head"><h2>📢 업데이트</h2><button class="q-close dark" data-close-modal aria-label="닫기">✕</button></div>
+    <div class="upd-wrap" id="updBody"></div>
   </div>
 </div>
 <!-- 게임 6개의 기록표 -->
@@ -7541,7 +7554,7 @@ function closetRender() {
 }
 function openShop() { hideModals(); shopRender(); $('shopModal').classList.remove('hidden'); }
 function openCloset() { hideModals(); closetRender(); $('closetModal').classList.remove('hidden'); closetView(true); }
-function hideModals() { ['shopModal', 'closetModal', 'questModal', 'settingsModal', 'titleModal', 'recModal', 'chordLab'].forEach(id => $(id).classList.add('hidden')); closetView(false); }
+function hideModals() { ['shopModal', 'closetModal', 'questModal', 'settingsModal', 'titleModal', 'recModal', 'updModal', 'chordLab'].forEach(id => $(id).classList.add('hidden')); closetView(false); }
 // 옷장 왼쪽: 지금 입은 모습을 3D로 (드래그로 돌려 보기)
 function closetView(on) {
   const V = SHOP.view || (SHOP.view = { on: false, rot: -.4, drag: null });
@@ -10234,6 +10247,19 @@ function recRender() {
 document.addEventListener('click', e => {
   if (e.target.closest('[data-records]')) { hideModals(); recRender(); $('recModal').classList.remove('hidden'); return; }
   const t = e.target.closest('[data-rec-tab]'); if (t) { recTab = t.dataset.recTab; recRender(); }
+});
+// ── 📢 업데이트 소식: 첫 화면 [업데이트] 버튼. 새 소식은 맨 위에 하나씩 추가 ──
+const UPDATES = [
+  ['11월 4일 업데이트', [
+    '대각선 퀘스트를 완료해야 자르기 기능을 사용할 수 있습니다.',
+    '원을 잠금해제 해야 보물상자가 나옵니다.',
+  ]],
+];
+document.addEventListener('click', e => {
+  if (!e.target.closest('[data-updates]')) return;
+  hideModals();
+  $('updBody').innerHTML = UPDATES.map(([t, list]) => `<div class="upd-item"><h3>${t}</h3><ul>${list.map(s => `<li>${s}</li>`).join('')}</ul></div>`).join('');
+  $('updModal').classList.remove('hidden');
 });
 // ── 🔒 잠금: 콘텐츠가 차례대로 열림 ──
 // 2D: 다각형 → 타일 테트리스 → 원 → 카드 → 피자 가게 → 3D 세계 / 3D: 다면체·정다면체 → 게임 1·2 → 회전체 → 실험실 · 게임 3
