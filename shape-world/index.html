@@ -2751,7 +2751,10 @@ function initExplore() {
     hideCtx();
   });
   document.addEventListener('pointerdown', e => { if (!e.target.closest('#ctx')) hideCtx(); if (!e.target.closest('#catCtx')) $('catCtx').classList.add('hidden'); });
-  $('catCtx').addEventListener('click', e => { const b = e.target.closest('[data-emote]'); if (b) { startEmote(b.dataset.emote, CAT_WORLD); $('catCtx').classList.add('hidden'); } });
+  $('catCtx').addEventListener('click', e => {
+    if (e.target.closest('[data-sit]')) { catSit(!CLOSET.catSit, CAT_WORLD); $('catCtx').classList.add('hidden'); return; }
+    const b = e.target.closest('[data-emote]'); if (b) { startEmote(b.dataset.emote, CAT_WORLD); $('catCtx').classList.add('hidden'); }
+  });
   $('showAxis').onchange = applyRevView;
   $('showProf').onchange = () => { applyRevView(); if ($('showProf').checked) qDone('r_prof'); };
   $('spinBtn').onclick = () => { startSpin(); qDone('r_spin'); };
@@ -3241,6 +3244,7 @@ function catGoTo(ndc) {
   if (rc.intersectObject(EX.obj.group, true).some(h => h.object.isMesh && h.object.visible)) return;
   const hit = rc.ray.intersectPlane(new THREE.Plane(YUP, -exFloorY()), new THREE.Vector3());
   if (!hit || Math.hypot(hit.x, hit.z) > 9) return;               // 바닥 모눈 밖은 무시 (모눈을 1.2배로 넓힘)
+  if (catSitBlock()) return;                                      // 앉아 있으면 [일어서기] 전까지 안 움직임
   EXC.jobs = []; EXC.job = null; endEmote();                      // 하던 체크·놀기는 그만둠
   EXC.wander = { to: hit.setY(0), at: 0, until: 0, user: true };
 }
@@ -3342,10 +3346,12 @@ function exCatTick() {
     let w = EXC.wander;
     if (!w || (w.at && now > w.until)) {
       const a = Math.atan2(side.x, side.z) + (Math.random() - .5) * 3.2, r = rIn + Math.random() * (rOut - rIn);
-      w = EXC.wander = { to: new THREE.Vector3(r * Math.sin(a), 0, r * Math.cos(a)), at: 0, until: 0 };
+      w = EXC.wander = CLOSET.catSit ? { to: p.clone().setY(0), at: now, until: Infinity }   // 앉아 있기: 그 자리에 그대로
+        : { to: new THREE.Vector3(r * Math.sin(a), 0, r * Math.cos(a)), at: 0, until: 0 };
     }
     st.to = w.to.clone().setY(fy);
-    if (!w.at && p.distanceTo(st.to) < s * .1) { w.at = now; w.until = now + (w.user ? 6000 : 1500 + Math.random() * 2500); }   // 누른 곳에서는 오래 기다림
+    // 도착: 바닥 위치로 비교 (구름 타고 떠 있는 높이는 빼고). 누른 곳에서는 오래 기다림
+    if (!w.at && Math.hypot(p.x - st.to.x, p.z - st.to.z) < s * .1) { w.at = now; w.until = now + (w.user ? 6000 : 1500 + Math.random() * 2500); }
     if (w.at) st.face = faceTo(p, v.camera.position);
   }
   // 몸짓을 먼저 정하고, 손(또는 양동이 입구)이 목표에 닿도록 몸을 옮김
@@ -3378,6 +3384,7 @@ const EMOTES = {
   bow: { dur: 1700, say: '안녕하세요!' }, stretch: { dur: 2400, say: '으~ 쭉!' }, cheer: { dur: 2000, say: '만세!' },
   nap: { dur: 3600, say: 'zZ… 쿨쿨' }, boxing: { dur: 2400, say: '슉슉! 🥊' }, dance: { dur: 2600, say: '룰루~ 🎵' },
   tumble: { dur: 1500, say: '덤블링!' }, superman: { dur: 2800, say: '슈퍼냥 출동!' }, ballet: { dur: 2400, say: '빙그르르~ 🩰' },
+  sit: { dur: 1600, say: '여기 앉아 있을게! 🪑' }, stand: { dur: 1300, say: '다시 놀러 가자!' },   // 앉아 있기 / 일어서기 (말만 함)
 };
 const FREE_EMOTES = ['wave', 'jump', 'groom', 'spin'];
 // 포즈 뽑기에서 나오는 포즈 (stars: 별 개수, hidden: 히든 보상). th: 상점 그림에 쓸 순간(0~1)
@@ -3494,8 +3501,10 @@ let CAT_WORLD = 'ex';                                            // 고양이 �
 function openCatMenu(x, y, w) {
   CAT_WORLD = w;
   const mine = POSES.filter(q => CLOSET.owned[q.id]), m = $('catCtx');
-  m.innerHTML = `<div class="ctx-title">🐱 고양이와 놀기</div>${FREE_EMOTES.map(k => `<button data-emote="${k}">${EMOTES[k].label}</button>`).join('')}
-    <hr><div class="ctx-title">💃 뽑은 포즈 (${mine.length}/${POSES.length})</div>`
+  m.innerHTML = `<div class="ctx-title">🐱 고양이와 놀기</div>`
+    + `<button data-sit>${CLOSET.catSit ? '🧍 일어서기' : '🪑 앉아 있기'}</button>`
+    + FREE_EMOTES.map(k => `<button data-emote="${k}">${EMOTES[k].label}</button>`).join('')
+    + `<hr><div class="ctx-title">💃 뽑은 포즈 (${mine.length}/${POSES.length})</div>`
     + (mine.length ? mine.map(q => `<button data-emote="${q.k}">${q.ic} ${q.name}</button>`).join('') : '<p class="ctx-note">상점의 포즈 뽑기에서 포즈를 모아 보세요!</p>')
     + '<button data-shop data-shop-tab="pose">🎰 포즈 뽑으러 가기</button>';
   m.classList.remove('hidden');
@@ -3526,6 +3535,18 @@ function catBubble(text) {
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), depthTest: false, transparent: true }));
   sp.scale.set(1.6, .55, 1); sp.position.y = 2.05; sp.renderOrder = 20;
   return sp;
+}
+// 앉아 있기: 고양이가 그 자리에서 움직이지 않음 (혼자 돌아다니지도, 바닥·상자를 눌러도 가지 않음). [일어서기]를 눌러야 다시 움직임
+function catSit(on, w) {
+  CLOSET.catSit = on; closetSave();
+  for (const H of [FL, EXC]) if (H.wander) H.wander = null;      // 다음 틱에 앉으면 그 자리, 일어서면 새로 돌아다닐 곳
+  startEmote(on ? 'sit' : 'stand', w);
+}
+let catSitT = 0;
+function catSitBlock() {                                         // 앉아 있으면 true (안내는 너무 자주 띄우지 않음)
+  if (!CLOSET.catSit) return false;
+  if (performance.now() - catSitT > 2500) { catSitT = performance.now(); toast('🪑 고양이가 앉아 있어요. 고양이를 더블클릭해서 [일어서기]를 누르면 움직여요.', '#7a4dff'); }
+  return true;
 }
 function startEmote(k, w = 'ex') {
   const fl = w === 'fl', H = fl ? FL : EXC, c = fl ? FL.cat : EXC.c, now = performance.now();
@@ -9104,7 +9125,7 @@ function flTap(ndc) {
   }
   if (FL.kind === 'sector' && FL.cmp && flHits(ndc, [FL.cmp.sm.g, FL.cmp.bg.g]).some(h => h.object.userData.kind === 'sec')) { flCmpPanel(); return; }   // 겹친 부채꼴을 누르면 비교 창 다시
   // 빈 바닥을 누르면 고양이가 그곳으로 감
-  const hit = flFloor(ndc); if (hit && Math.hypot(...hit) < 9) FL.wander = { to: hit, at: 0, until: 0, user: true };
+  const hit = flFloor(ndc); if (hit && Math.hypot(...hit) < 9 && !catSitBlock()) FL.wander = { to: hit, at: 0, until: 0, user: true };
 }
 function flGrab(ndc) {
   FL.skipTap = false;
@@ -9459,7 +9480,8 @@ function flCatTick(now, t, dt) {
     let w = FL.wander;
     if (!w || (w.at && now > w.until)) {
       const a = Math.random() * Math.PI * 2, r = ER + .9 + Math.random() * 1.2;
-      w = FL.wander = { to: [r * Math.cos(a), r * Math.sin(a) * .7 - .6], at: 0, until: 0 };
+      w = FL.wander = CLOSET.catSit ? { to: [p.x, -p.z], at: now, until: Infinity }   // 앉아 있기: 그 자리에 그대로
+        : { to: [r * Math.cos(a), r * Math.sin(a) * .7 - .6], at: 0, until: 0 };
     }
     to = P3(...w.to);
     if (!w.at && p.distanceTo(to) < .06) { w.at = now; w.until = now + (w.user ? 5000 : 1500 + Math.random() * 2500); }
@@ -10265,6 +10287,7 @@ const UPDATES = [
     '퀘스트를 깨면 동전이 자동으로 들어옵니다. (퀘스트 창에서 받기를 누르지 않아도 됩니다.)',
     '예전에 퀘스트를 깨고 받지 않았던 동전도 앱을 열면 한꺼번에 들어옵니다.',
     '잠금해제 조건이 변경되었습니다.',
+    '고양이를 더블클릭하면 [앉아 있기]를 할 수 있습니다. 앉아 있는 동안은 움직이지 않고, [일어서기]를 누르면 다시 움직입니다.',
   ]],
   ['11월 4일 업데이트', [
     '대각선 퀘스트를 완료해야 자르기 기능을 사용할 수 있습니다.',
@@ -10455,6 +10478,7 @@ function chestTap(w, ndc) {
   const E = chestEnv(w), C = CH[w]; if (!E || !C.list.length) return false;
   const rc = new THREE.Raycaster(); rc.setFromCamera(ndc, E.v.camera);
   const ch = C.list.find(c => !c.fx && rc.intersectObject(c.g, true).length); if (!ch) return false;
+  if (catSitBlock()) return true;                                 // 앉아 있으면 상자로 가지 않음
   ch.cool = false;
   if (w === '2d') FL.wander = { to: [ch.x, -ch.z], at: 0, until: 0, user: true };
   else { EXC.jobs = []; EXC.job = null; EXC.wander = { to: new THREE.Vector3(ch.x, 0, ch.z), at: 0, until: 0, user: true }; }
