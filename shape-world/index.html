@@ -7485,7 +7485,7 @@ const gachaItems = cat => cat === 'pose' ? POSES : cat === 'trail' ? TRAILS : ca
 const itemById = id => cosById(id) || POSES.find(q => q.id === id) || TRAILS.find(q => q.id === id) || FRIENDS.find(q => q.id === id);
 const gachaUnit = cat => cat === 'friend' ? '친구' : cat === 'pose' ? '포즈' : cat === 'trail' ? '효과' : '옷';
 const HIDDEN_SETS = [];                                          // 히든 보상은 없앰 (예전 히든 옷·포즈·효과는 보통 등급으로 나옴)
-const GACHA_RATES = [[1, 26], [2, 23], [3, 20], [4, 17], [5, 14]];   // 등급별 확률(%)
+const GACHA_RATES = [[1, 29], [2, 26], [3, 20], [4, 14], [5, 11]];   // 등급별 확률(%) (11월: 4·5성 3%씩 내리고 1·2성 3%씩 올림)
 const GRADE_COLOR = { 1: '#9aa7bd', 2: '#3fcf8e', 3: '#2f9bff', 4: '#a05bff', 5: '#ffb700', hidden: '#ff4fa0' };
 const isHidden = it => HIDDEN_SETS.includes(it.set);
 const gachaGrade = it => isHidden(it) ? 'hidden' : it.stars ?? (it.hidden ? 5 : Math.ceil(it.tier / 2));   // 예전 히든(발레 회전·원주율 π 꼬리)은 ★5
@@ -10307,10 +10307,10 @@ document.addEventListener('click', e => {
 // ── 📢 업데이트 소식: 첫 화면 [업데이트] 버튼. 새 소식은 맨 위에 하나씩 추가 ──
 const UPDATES = [
   ['11월 5일 업데이트', [
-    '퀘스트를 깨면 동전이 자동으로 들어옵니다. (퀘스트 창에서 받기를 누르지 않아도 됩니다.)',
-    '예전에 퀘스트를 깨고 받지 않았던 동전도 앱을 열면 한꺼번에 들어옵니다.',
-    '잠금해제 조건이 변경되었습니다.',
+    '퀘스트를 깨면 동전이 자동으로 들어옵니다.',
+    '잠금해제 조건이 변경되었습니다. 2D 세계의 「원」과 3D 세계의 「정다면체」·「회전체」는 선생님이 알려 주는 코드를 입력해야 열립니다. (이미 열려 있던 경우는 그대로 열려 있습니다.)',
     '고양이를 더블클릭하면 [앉아 있기]를 할 수 있습니다. 앉아 있는 동안은 움직이지 않고, [일어서기]를 누르면 다시 움직입니다.',
+    '상점에서 뽑기 확률이 변경되었습니다.',
   ]],
   ['11월 4일 업데이트', [
     '대각선 퀘스트를 완료해야 자르기 기능을 사용할 수 있습니다.',
