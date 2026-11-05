@@ -5849,15 +5849,20 @@ function qRender() {
   }).join('');
 }
 function openQuests() { hideCtx(); qRender(); $('questModal').classList.remove('hidden'); }
-// 비밀 번호: 키보드로 정해진 숫자 4개를 차례로 누르면 히든 퀘스트의 내용이 보임 (다시 누르면 숨김). 번호는 codeHash로만 비교
-var qReveal = false, qKeys = '';
+// 비밀 번호: 키보드로 정해진 숫자 6개를 차례로 누르면 히든 퀘스트의 내용이 보임 (다시 누르면 숨김). 번호는 codeHash로만 비교
+// codeHash가 무거워서, 숫자를 누르다가 잠깐 멈췄을 때만 한 번 확인함 (게임 중에 숫자를 눌러도 끊기지 않게)
+var qReveal = false, qKeys = '', qKeyT = 0;
 document.addEventListener('keydown', e => {
   if (/INPUT|TEXTAREA/.test(e.target.tagName) || !/^\d$/.test(e.key)) return;
-  qKeys = (qKeys + e.key).slice(-4);
-  if (codeHash(qKeys) !== '1tzn73z') return;
-  qKeys = ''; qReveal = !qReveal;
-  toast(qReveal ? '🔓 히든 퀘스트를 볼 수 있어요! (퀘스트 창)' : '🔒 히든 퀘스트를 다시 숨겼어요.', '#7a4dff');
-  if (!$('questModal').classList.contains('hidden')) qRender();
+  qKeys = (qKeys + e.key).slice(-6);
+  clearTimeout(qKeyT);
+  if (qKeys.length < 6) return;
+  qKeyT = setTimeout(() => {
+    if (codeHash(qKeys) !== '1smkddx-4nkeyg') return;
+    qKeys = ''; qReveal = !qReveal;
+    toast(qReveal ? '🔓 히든 퀘스트를 볼 수 있어요! (퀘스트 창)' : '🔒 히든 퀘스트를 다시 숨겼어요.', '#7a4dff');
+    if (!$('questModal').classList.contains('hidden')) qRender();
+  }, 600);
 });
 function initQuests() {
   document.addEventListener('click', e => { const b = e.target.closest('[data-quest]'); if (b) { if (b.dataset.qtab) qTab = b.dataset.qtab; openQuests(); } });
@@ -7706,27 +7711,34 @@ function shopReset(cat) {
 }
 // 선생님 코드: 숫자를 그대로 적지 않고 codeHash로 바꾼 값만 둠 (페이지 소스를 보거나 AI가 읽어도 코드가 바로 보이지 않게)
 // 코드 목록은 선생님용 코드표 파일(깃허브에 올리지 않음)에 있음. 새 코드는 codeHash('숫자')로 만든 값을 넣음
-function codeHash(s) { let h = 0x811c9dc5; for (const ch of 'sw-cat:' + s + ':도형') { h ^= ch.charCodeAt(0); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(36); }
+// 일부러 무겁게 40만 번 섞음: 한 번 확인은 0.05초쯤이지만, 6자리를 모두 넣어 보려면 몇 시간이 걸림
+function codeHash(s) {
+  const str = 'sw-cat:' + s + ':도형'; let h = 0x811c9dc5, g = 0x9e3779b9;
+  for (let r = 0; r < 400000; r++) for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i) + r; h = Math.imul(h, 0x01000193) >>> 0; g = Math.imul(g ^ h, 0x85ebca6b) >>> 0; g ^= g >>> 13;
+  }
+  return h.toString(36) + g.toString(36);
+}
 // 잠금 코드: 열려 있으면 잠그고, 잠겨 있으면 엶 (모든 잠금 코드도 같음: 모두 열려 있으면 모두 잠금)
 function lockToggle(keys) { lockSetCode(keys, keys.every(isOpen) ? 'closed' : 'open'); }
 const CODES = [
-  ['l7kjty', () => allReset()],
-  ['i8g4qq', () => coinAsk(1)], ['15qefd9', () => coinAsk(-1)],
+  ['1kowwqt4m58u8', () => allReset()],
+  ['1kdex1goh76p', () => coinAsk(1)], ['rjtgat-21r0hv', () => coinAsk(-1)],
   // 퀘스트: 테마마다 달성 ↔ 초기화
-  ...[['poly2', '1umynxu'], ['circ', 'o2bd6u'], ['tile', '1rj4gty'], ['cards', '1tx8zk7'], ['pizza', 'yksax1'], ['poly', 'sy2wsx'], ['plat', '5ibij2'],
-    ['rev', '1iwiuuu'], ['g1', '1npe3k7'], ['g2', '18epsb4'], ['g3', 'p2x7hg'], ['all', 'xdxe5c'], ['hidden', '12eul4q']].map(([k, h]) => [h, () => questToggle(k)]),
-  ['1vof7qo', () => toggleRevealHidden()],
-  ['ndovdo', () => chestDropNow()],
+  ...[['poly2', '51wjet-hef4g4'], ['circ', 'chc1x-4ttxdk'], ['tile', '2ujryd-2qfyqv'], ['cards', 'ueotz9-n0jc4a'], ['pizza', '723idebz6oo'], ['poly', '1lptu11196w1b'], ['plat', 'pimymd-4i6q5e'],
+    ['rev', 's30qbp-ti5kg2'], ['g1', 's9rtfp-a7cc43'], ['g2', 'n4145h-956j0t'], ['g3', 'f2slz9dmhi47'], ['all', '1sm9br9-bblhto'], ['hidden', '18njxhhtt6yel']].map(([k, h]) => [h, () => questToggle(k)]),
+  ['1igaeklnpqp9j', () => toggleRevealHidden()],
+  ['xtyon9hcrz3i', () => chestDropNow()],
   // 잠금: 열기 ↔ 잠그기
-  ['13i03oh', () => lockToggle(Object.keys(LOCKS))],
-  ['1hvp7ed', () => lockSetCode(Object.keys(LOCKS), null)],
-  ...[['tiles', 'jc9o0b'], ['circle', '1m77bpq'], ['cards', '1nm69bz'], ['pizza', '1u2a8w8'], ['w3d', '165dbpi'], ['plat', '1pyftxl'], ['game1', 'ahv6yk'],
-    ['game2', '1r8np9a'], ['rev', 'n52qb1'], ['lab', 'yjwf05'], ['game3', '10vp9js'], ['cut2d', '10opeby']].map(([k, h]) => [h, () => lockToggle([k])]),
-  ['1kddlvf', () => titleAll()], ['1atarh9', () => titleReset()],
-  ['hjakjb', () => titleGive('t_cardm')], ['ys0fy6', () => titleGive('t_time')], ['1n1o60s', () => titleGive('t_tetris')],
+  ['1ut81fp-2uow7d', () => lockToggle(Object.keys(LOCKS))],
+  ['knrc91t2hqhh', () => lockSetCode(Object.keys(LOCKS), null)],
+  ...[['tiles', '16qzww53bqnr'], ['circle', 'gbm66d7io177'], ['cards', '2t17lx-aingan'], ['pizza', '1wqwg5-rmvomg'], ['w3d', '3ur3d1-n5nyzn'], ['plat', 'jkzww59yuj8'], ['game1', '1q8n29x-5zjzj'],
+    ['game2', 'sah9hh-f7itwb'], ['rev', '9bcy85-j087fr'], ['lab', 'tbba9xi9gqfr'], ['game3', '19l7qrp398i71'], ['cut2d', '3ck6v9-svetud']].map(([k, h]) => [h, () => lockToggle([k])]),
+  ['fypl51qucstq', () => titleAll()], ['cslged-br8yec', () => titleReset()],
+  ['1i2g3et-u65rof', () => titleGive('t_cardm')], ['jz37t1-o7we9a', () => titleGive('t_time')], ['viwpfp1hy7gm', () => titleGive('t_tetris')],
   // 상점: 모두 받기 ↔ 초기화
-  ...[['hat', '1tfgyem'], ['top', '1pcgiv5'], ['cloud', '18kw7y6'], ['gloves', 'oaav8b'], ['friend', 'hh3yw1'], ['trail', 'a40atp'], ['pose', 'o5mbc6']].map(([k, h]) => [h, () => shopToggle(k)]),
-  ['t1ug12', () => costumeReset()],
+  ...[['hat', '121i30lh6qig0'], ['top', '7s1079xda3aj'], ['cloud', '18hr5j9-m5gaew'], ['gloves', '1wj0e6dau5s0i'], ['friend', 'wkkshxvmlwz9'], ['trail', 'd92erp-f1q4c5'], ['pose', '1iv48ud7xs0yj']].map(([k, h]) => [h, () => shopToggle(k)]),
+  ['12r0yituy0mzy', () => costumeReset()],
 ];
 // 상점에서 뽑은 포즈를 모두 지움 (다시 뽑을 수 있음)
 function poseReset() {
@@ -7751,7 +7763,7 @@ function codeInput() {
 }
 function enterCode() {
   const v = codeVal; $('codeIn').value = ''; codeVal = '';
-  const hit = v && CODES.find(c => c[0] === codeHash(v));
+  const hv = v && codeHash(v), hit = hv && CODES.find(c => c[0] === hv);
   if (hit) hit[1](); else codeMsg(v ? '코드가 맞지 않아요.' : '코드를 입력해 주세요.', 'bad');
 }
 function settingsUI() { const fs = !!document.fullscreenElement; $('fsBtn').textContent = fs ? '켜짐' : '꺼짐'; $('fsBtn').classList.toggle('on', fs); }
