@@ -7732,8 +7732,8 @@ const CODES = [
   // 잠금: 열기 ↔ 잠그기
   ['1ut81fp-2uow7d', () => lockToggle(Object.keys(LOCKS))],
   ['knrc91t2hqhh', () => lockSetCode(Object.keys(LOCKS), null)],
-  ...[['tiles', '16qzww53bqnr'], ['circle', 'gbm66d7io177'], ['cards', '2t17lx-aingan'], ['pizza', '1wqwg5-rmvomg'], ['w3d', '3ur3d1-n5nyzn'], ['plat', 'jkzww59yuj8'], ['game1', '1q8n29x-5zjzj'],
-    ['game2', 'sah9hh-f7itwb'], ['rev', '9bcy85-j087fr'], ['lab', 'tbba9xi9gqfr'], ['game3', '19l7qrp398i71'], ['cut2d', '3ck6v9-svetud']].map(([k, h]) => [h, () => lockToggle([k])]),
+  ...[['tiles', '16qzww53bqnr'], ['circle', '52qk79q85dzv'], ['cards', '2t17lx-aingan'], ['pizza', '1wqwg5-rmvomg'], ['w3d', '3ur3d1-n5nyzn'], ['plat', 'yg2ypx-z5am1n'], ['game1', '1q8n29x-5zjzj'],
+    ['game2', 'sah9hh-f7itwb'], ['rev', '7k7sxx-6h3ard'], ['lab', 'tbba9xi9gqfr'], ['game3', '19l7qrp398i71'], ['cut2d', '3ck6v9-svetud']].map(([k, h]) => [h, () => lockToggle([k])]),
   ['fypl51qucstq', () => titleAll()], ['cslged-br8yec', () => titleReset()],
   ['1i2g3et-u65rof', () => titleGive('t_cardm')], ['jz37t1-o7we9a', () => titleGive('t_time')], ['viwpfp1hy7gm', () => titleGive('t_tetris')],
   // 상점: 모두 받기 ↔ 초기화
@@ -9415,6 +9415,11 @@ function flTick() {
 function flCatTick(now, t, dt) {
   const c = FL.cat, s = FL.cs, p = c.g.position, j = FL.job;
   p.y = 0;                                                        // 거리 계산은 바닥 높이로 (구름 타고 뜬 높이는 끝에서 다시 줌)
+  // 레이저·가위·붓으로 일할 때는 지금 탐구 중인 도형의 좌표(꼭짓점 좌표)로 계산함. 도형을 옮겨서 화면 가운데에 있지 않아도
+  // 고양이와 그리는 선이 꼭짓점과 꼭짓점을 정확히 이음 (끝에서 고양이 위치를 다시 화면 좌표로 되돌림)
+  const off = (j || FL.brush || FL.brushQ.length) && FL.act ? FL.root.position.clone().add(P3(...FL.act.pos)).setY(0) : null;
+  if (off) p.sub(off);
+  FL.beams.position.copy(off || new THREE.Vector3());
   let to = null, face = null, arm = null, armL = null, speed = 1.6, tool = 'none';
   FL.scissors.visible = !!(j && j.k === 'scissors');
   if (FL.emote && (j || FL.brush || FL.brushQ.length)) endEmote('fl');   // 일을 시작하면 놀기는 그만
@@ -9521,6 +9526,7 @@ function flCatTick(now, t, dt) {
   catAnimate(c, { face, arm, armL, walk: false, tool, fly: true }, dt, t);
   if (FL.emote && (j || FL.brush || !emotePose(c, FL.emote, now, t))) endEmote('fl');
   c.brush.visible = tool === 'brush';
+  if (off) p.add(off);                                            // 도형 좌표 → 화면 좌표
   p.y = FL.lift;
   trailTick(FL, c, FL.v.scene, s, dt);                             // 이동 효과
 }
