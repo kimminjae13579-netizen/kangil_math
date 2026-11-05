@@ -7761,10 +7761,20 @@ function codeInput() {
   codeVal = (codeVal.slice(0, stars) + v.replace(/★/g, '').replace(/\D/g, '')).slice(0, 8);
   el.value = '★'.repeat(codeVal.length);
 }
+// 코드를 5번 연달아 틀리면 1분 동안 입력을 막음 (아무 숫자나 계속 넣어 보는 것을 막으려고. 새로고침해도 이어짐)
+const CODE_WAIT_KEY = 'shape-code-wait';
+let codeMiss = 0;
 function enterCode() {
   const v = codeVal; $('codeIn').value = ''; codeVal = '';
-  const hv = v && codeHash(v), hit = hv && CODES.find(c => c[0] === hv);
-  if (hit) hit[1](); else codeMsg(v ? '코드가 맞지 않아요.' : '코드를 입력해 주세요.', 'bad');
+  let until = enterCode.until || 0; try { until = Math.max(until, +localStorage.getItem(CODE_WAIT_KEY) || 0); } catch (_) {}
+  if (Date.now() < until) { codeMsg(`⏳ 코드를 여러 번 틀렸어요. ${Math.ceil((until - Date.now()) / 1000)}초 뒤에 다시 입력해 주세요.`, 'bad'); return; }
+  if (!v) { codeMsg('코드를 입력해 주세요.', 'bad'); return; }
+  const hv = codeHash(v), hit = CODES.find(c => c[0] === hv);
+  if (hit) { codeMiss = 0; hit[1](); return; }
+  if (++codeMiss < 5) { codeMsg('코드가 맞지 않아요.', 'bad'); return; }
+  codeMiss = 0; enterCode.until = Date.now() + 60000;
+  try { localStorage.setItem(CODE_WAIT_KEY, enterCode.until); } catch (_) {}
+  codeMsg('⏳ 코드를 5번 틀렸어요. 1분 뒤에 다시 입력해 주세요.', 'bad');
 }
 function settingsUI() { const fs = !!document.fullscreenElement; $('fsBtn').textContent = fs ? '켜짐' : '꺼짐'; $('fsBtn').classList.toggle('on', fs); }
 function initSettings() {
