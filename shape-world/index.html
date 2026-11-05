@@ -7747,6 +7747,23 @@ function poseReset() {
   if (!$('shopModal').classList.contains('hidden')) shopRender();
   codeMsg(`💃 뽑은 포즈 ${n}개를 모두 초기화했어요.`, 'ok');
 }
+// 11월 5일 한 번만 하는 점검: 지금까지 모은 동전(가진 동전 + 상점 뽑기로 산 물건 값, 히든 보상은 뺌)이 999개 이상이면
+// 이 브라우저의 기록을 모두 초기화. 브라우저마다 딱 한 번만 검사 (점검 표시는 모두 초기화로도 지워지지 않음)
+const AUDIT_KEY = 'shape-audit-1105';
+function coinEarnedEst() {
+  const bought = [...COSTUMES, ...TRAILS, ...POSES].filter(it => CLOSET.owned[it.id] && !isHQ(it));
+  return CLOSET.coins + bought.reduce((a, it) => a + (GACHA_PRICE[TRAILS.includes(it) ? 'trail' : POSES.includes(it) ? 'pose' : it.cat] || 0), 0);
+}
+function coinAudit() {                                           // true를 돌려주면 초기화하고 다시 여는 중
+  let st = null; try { st = localStorage.getItem(AUDIT_KEY); } catch (_) { return false; }   // 저장이 막힌 브라우저는 검사하지 않음
+  if (st === 'wiped') { try { localStorage.setItem(AUDIT_KEY, 'done'); } catch (_) {} setTimeout(() => toast('🧹 동전 점검으로 이 브라우저의 기록이 모두 초기화되었어요. 처음부터 다시 시작해요!', '#7a4dff', true), 1500); return false; }
+  if (st) return false;
+  if (coinEarnedEst() < 999) { try { localStorage.setItem(AUDIT_KEY, 'done'); } catch (_) {} return false; }
+  for (const k of ['quest-v1', 'cat-closet-v1', 'rev-gallery-v1', 'g3-records-v3', 'tiletetris-v1', 'game-records-v1', 'sector-match-rank-v3']) { try { localStorage.removeItem(k); } catch (_) {} }
+  try { localStorage.setItem(AUDIT_KEY, 'wiped'); } catch (_) {}
+  location.reload();
+  return true;
+}
 // 모두 초기화: 이 기기에 저장된 모든 기록을 지우고 처음 상태로 (퀘스트·동전·옷·칭호·잠금·게임 기록·갤러리)
 function allReset() {
   if (!confirm('정말 모두 지울까요?\n퀘스트, 동전, 옷과 뽑은 것, 칭호, 잠금, 게임 기록, 갤러리가 모두 처음으로 돌아가요. 되돌릴 수 없어요.')) { codeMsg('취소했어요.'); return; }
@@ -10818,7 +10835,7 @@ function initCoverShapes() {
   r.dispose(); r.forceContextLoss();                               // 그림판(WebGL)을 완전히 닫음 (브라우저마다 한 번에 열 수 있는 수가 정해져 있음)
 }
 
-if (window.THREE) {
+if (window.THREE && !coinAudit()) {                              // 동전 점검으로 초기화하면 다시 열리니 나머지는 하지 않음
   CYL = new THREE.CylinderGeometry(1, 1, 1, 14, 1);
   SPH = new THREE.SphereGeometry(1, 20, 14);
   initExplore(); initPad(); initGames(); initExtras(); initVol(); initQuests(); initShop(); hqSync(); qAutoClaim(); updBadge(); lockInit(); initChest(); initG3(); initCoverShapes(); initCoverCat(); coverFriends(); coverFriendsSync();
