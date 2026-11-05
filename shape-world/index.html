@@ -5854,7 +5854,7 @@ var qReveal = false, qKeys = '';
 document.addEventListener('keydown', e => {
   if (/INPUT|TEXTAREA/.test(e.target.tagName) || !/^\d$/.test(e.key)) return;
   qKeys = (qKeys + e.key).slice(-4);
-  if (codeHash(qKeys) !== '175hmvc') return;
+  if (codeHash(qKeys) !== '1tzn73z') return;
   qKeys = ''; qReveal = !qReveal;
   toast(qReveal ? '🔓 히든 퀘스트를 볼 수 있어요! (퀘스트 창)' : '🔒 히든 퀘스트를 다시 숨겼어요.', '#7a4dff');
   if (!$('questModal').classList.contains('hidden')) qRender();
@@ -7710,23 +7710,23 @@ function codeHash(s) { let h = 0x811c9dc5; for (const ch of 'sw-cat:' + s + ':�
 // 잠금 코드: 열려 있으면 잠그고, 잠겨 있으면 엶 (모든 잠금 코드도 같음: 모두 열려 있으면 모두 잠금)
 function lockToggle(keys) { lockSetCode(keys, keys.every(isOpen) ? 'closed' : 'open'); }
 const CODES = [
-  ['1q709iu', () => allReset()],
-  ['hbwre8', () => coinAsk(1)], ['1hq3mp5', () => coinAsk(-1)],
+  ['l7kjty', () => allReset()],
+  ['i8g4qq', () => coinAsk(1)], ['15qefd9', () => coinAsk(-1)],
   // 퀘스트: 테마마다 달성 ↔ 초기화
-  ...[['poly2', '135noqj'], ['circ', 'c5u7dc'], ['tile', '794axq'], ['cards', 'hrcu5w'], ['pizza', '9nhqyn'], ['poly', '1jutwdh'], ['plat', 'o0hn8z'],
-    ['rev', '1jxvdul'], ['g1', '1mlmd8x'], ['g2', 'f4n3mi'], ['g3', '1wldz5k'], ['all', '1qgjue'], ['hidden', '38h25']].map(([k, h]) => [h, () => questToggle(k)]),
-  ['1tprpm0', () => toggleRevealHidden()],
-  ['1ko8rv5', () => chestDropNow()],
+  ...[['poly2', '1umynxu'], ['circ', 'o2bd6u'], ['tile', '1rj4gty'], ['cards', '1tx8zk7'], ['pizza', 'yksax1'], ['poly', 'sy2wsx'], ['plat', '5ibij2'],
+    ['rev', '1iwiuuu'], ['g1', '1npe3k7'], ['g2', '18epsb4'], ['g3', 'p2x7hg'], ['all', 'xdxe5c'], ['hidden', '12eul4q']].map(([k, h]) => [h, () => questToggle(k)]),
+  ['1vof7qo', () => toggleRevealHidden()],
+  ['ndovdo', () => chestDropNow()],
   // 잠금: 열기 ↔ 잠그기
-  ['18phch9', () => lockToggle(Object.keys(LOCKS))],
-  ['1ysmrih', () => lockSetCode(Object.keys(LOCKS), null)],
-  ...[['tiles', 'ed12ds'], ['circle', '1stmhen'], ['cards', '1swiub'], ['pizza', 'ul24zt'], ['w3d', '1wogxoq'], ['plat', '5kk1mw'], ['game1', 'cdkrgz'],
-    ['game2', '10s2meu'], ['rev', 'tcul1r'], ['lab', '1c958wd'], ['game3', 'rmvju3'], ['cut2d', 'tam4t']].map(([k, h]) => [h, () => lockToggle([k])]),
-  ['174nfwc', () => titleAll()], ['fgwxcu', () => titleReset()],
-  ['1970exu', () => titleGive('t_cardm')], ['f8lwgh', () => titleGive('t_time')], ['4b24xt', () => titleGive('t_tetris')],
+  ['13i03oh', () => lockToggle(Object.keys(LOCKS))],
+  ['1hvp7ed', () => lockSetCode(Object.keys(LOCKS), null)],
+  ...[['tiles', 'jc9o0b'], ['circle', '1m77bpq'], ['cards', '1nm69bz'], ['pizza', '1u2a8w8'], ['w3d', '165dbpi'], ['plat', '1pyftxl'], ['game1', 'ahv6yk'],
+    ['game2', '1r8np9a'], ['rev', 'n52qb1'], ['lab', 'yjwf05'], ['game3', '10vp9js'], ['cut2d', '10opeby']].map(([k, h]) => [h, () => lockToggle([k])]),
+  ['1kddlvf', () => titleAll()], ['1atarh9', () => titleReset()],
+  ['hjakjb', () => titleGive('t_cardm')], ['ys0fy6', () => titleGive('t_time')], ['1n1o60s', () => titleGive('t_tetris')],
   // 상점: 모두 받기 ↔ 초기화
-  ...[['hat', 'cy06qw'], ['top', 'bblr0u'], ['cloud', '1b3uo3g'], ['gloves', 'q83xrf'], ['friend', 'yx0vso'], ['trail', '1p5xd1v'], ['pose', 'pczbib']].map(([k, h]) => [h, () => shopToggle(k)]),
-  ['1rlmz75', () => costumeReset()],
+  ...[['hat', '1tfgyem'], ['top', '1pcgiv5'], ['cloud', '18kw7y6'], ['gloves', 'oaav8b'], ['friend', 'hh3yw1'], ['trail', 'a40atp'], ['pose', 'o5mbc6']].map(([k, h]) => [h, () => shopToggle(k)]),
+  ['t1ug12', () => costumeReset()],
 ];
 // 상점에서 뽑은 포즈를 모두 지움 (다시 뽑을 수 있음)
 function poseReset() {
@@ -7749,20 +7749,10 @@ function codeInput() {
   codeVal = (codeVal.slice(0, stars) + v.replace(/★/g, '').replace(/\D/g, '')).slice(0, 8);
   el.value = '★'.repeat(codeVal.length);
 }
-// 코드를 5번 연달아 틀리면 1분 동안 입력을 막음 (아무 숫자나 계속 넣어 보는 것을 막으려고)
-const CODE_WAIT_KEY = 'shape-code-wait';
-let codeMiss = 0;
 function enterCode() {
   const v = codeVal; $('codeIn').value = ''; codeVal = '';
-  let until = 0; try { until = +localStorage.getItem(CODE_WAIT_KEY) || 0; } catch (_) { until = enterCode.until || 0; }
-  if (Date.now() < until) { codeMsg(`⏳ 코드를 여러 번 틀렸어요. ${Math.ceil((until - Date.now()) / 1000)}초 뒤에 다시 입력해 주세요.`, 'bad'); return; }
-  if (!v) { codeMsg('코드를 입력해 주세요.', 'bad'); return; }
-  const hit = CODES.find(c => c[0] === codeHash(v));
-  if (hit) { codeMiss = 0; hit[1](); return; }
-  if (++codeMiss >= 5) {
-    codeMiss = 0; enterCode.until = Date.now() + 60000; try { localStorage.setItem(CODE_WAIT_KEY, enterCode.until); } catch (_) {}
-    codeMsg('⏳ 코드를 5번 틀렸어요. 1분 뒤에 다시 입력해 주세요.', 'bad');
-  } else codeMsg('코드가 맞지 않아요.', 'bad');
+  const hit = v && CODES.find(c => c[0] === codeHash(v));
+  if (hit) hit[1](); else codeMsg(v ? '코드가 맞지 않아요.' : '코드를 입력해 주세요.', 'bad');
 }
 function settingsUI() { const fs = !!document.fullscreenElement; $('fsBtn').textContent = fs ? '켜짐' : '꺼짐'; $('fsBtn').classList.toggle('on', fs); }
 function initSettings() {
