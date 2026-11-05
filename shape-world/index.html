@@ -7700,8 +7700,8 @@ const CODES = [
   ['🔒 잠금', '0361', '모든 잠금 풀기', () => lockSetCode(Object.keys(LOCKS), 'open')],
   ['🔒 잠금', '8338', '모두 잠그기', () => lockSetCode(Object.keys(LOCKS), 'closed')],
   ['🔒 잠금', '1722', '잠금 원래대로 (조건을 이룬 것만 열림)', () => lockSetCode(Object.keys(LOCKS), null)],
-  ...[['tiles', '1288', '타일 테트리스'], ['circle', '5966', '2D 도형 세계의 원'], ['cards', '9733', '카드 짝 맞추기'], ['pizza', '0138', '고양이 피자 가게'], ['w3d', '7828', '3D 세계'],
-    ['game1', '6570', '회전체 탐정단'], ['game2', '4788', '빙글빙글 회전 화가'], ['rev', '9919', '3D 도형 세계의 회전체'], ['lab', '0615', '아르키메데스 실험실'], ['game3', '0419', '딱 맞춰 붓기 대작전'],
+  ...[['tiles', '1288', '타일 테트리스'], ['circle', '6628', '2D 도형 세계의 원'], ['cards', '9733', '카드 짝 맞추기'], ['pizza', '0138', '고양이 피자 가게'], ['w3d', '7828', '3D 세계'],
+    ['plat', '1103', '3D 도형 세계의 정다면체'], ['game1', '6570', '회전체 탐정단'], ['game2', '4788', '빙글빙글 회전 화가'], ['rev', '0323', '3D 도형 세계의 회전체'], ['lab', '0615', '아르키메데스 실험실'], ['game3', '0419', '딱 맞춰 붓기 대작전'],
     ['cut2d', '4471', '다각형 자르기']]
     .map(([k, c, nm]) => ['🔒 잠금', c, `「${nm}」 잠금 풀기`, () => lockSetCode([k], 'open')]),
   ['🏅 칭호', '6357', '모든 칭호 받기', () => titleAll()],
@@ -10264,6 +10264,7 @@ const UPDATES = [
   ['11월 5일 업데이트', [
     '퀘스트를 깨면 동전이 자동으로 들어옵니다. (퀘스트 창에서 받기를 누르지 않아도 됩니다.)',
     '예전에 퀘스트를 깨고 받지 않았던 동전도 앱을 열면 한꺼번에 들어옵니다.',
+    '잠금해제 조건이 변경되었습니다.',
   ]],
   ['11월 4일 업데이트', [
     '대각선 퀘스트를 완료해야 자르기 기능을 사용할 수 있습니다.',
@@ -10273,10 +10274,11 @@ const UPDATES = [
 // 새 소식(맨 위 제목)을 아직 안 열어 봤으면 버튼에 NEW 표시. 창을 한 번 열면 없앰
 const UPD_KEY = 'shape-upd-seen';
 const updSeen = () => { try { return localStorage.getItem(UPD_KEY); } catch (_) { return updSeen.mem; } };
-function updBadge() { document.querySelectorAll('[data-updates]').forEach(b => b.classList.toggle('has-new', updSeen() !== UPDATES[0][0])); }
+const updSig = () => JSON.stringify(UPDATES[0]);                // 맨 위 소식의 제목+내용 (같은 날 줄을 더해도 NEW가 다시 뜸)
+function updBadge() { document.querySelectorAll('[data-updates]').forEach(b => b.classList.toggle('has-new', updSeen() !== updSig())); }
 document.addEventListener('click', e => {
   if (!e.target.closest('[data-updates]')) return;
-  updSeen.mem = UPDATES[0][0]; try { localStorage.setItem(UPD_KEY, UPDATES[0][0]); } catch (_) {}
+  updSeen.mem = updSig(); try { localStorage.setItem(UPD_KEY, updSig()); } catch (_) {}
   updBadge();
   hideModals();
   $('updBody').innerHTML = UPDATES.map(([t, list]) => `<div class="upd-item"><h3>${t}</h3><ul>${list.map(s => `<li>${s}</li>`).join('')}</ul></div>`).join('');
@@ -10289,14 +10291,15 @@ function playAdd(g) { CLOSET.plays = { ...CLOSET.plays, [g]: playN(g) + 1 }; clo
 const qd = id => !!qLoad().done[id];
 const LOCKS = {
   tiles: { nm: '타일 테트리스', ok: () => catAll(qLoad(), 'poly2'), need: () => '「다각형」 일반 퀘스트를 모두 깨면 열려요.' },
-  circle: { nm: '2D 도형 세계의 원', ok: () => playN('tile') >= 3, need: () => `타일 테트리스를 3번 하면 열려요. (지금 ${Math.min(3, playN('tile'))} / 3번)` },
+  // 원·정다면체·회전체: 선생님 코드로만 열림 (코드를 바꾸기 전에 이미 열려 있던 브라우저는 CLOSET.legacy로 계속 열림)
+  circle: { nm: '2D 도형 세계의 원', ok: () => lockLegacy('circle'), need: () => '선생님이 알려 주는 코드를 입력하면 열려요.' },
   cards: { nm: '카드 짝 맞추기', ok: () => ['c_chord', 'c_secant', 'c_seg', 's_make'].every(qd), need: () => '「원에 현 긋기」 「원에 할선 긋기」 「원을 잘라 활꼴 만들기」 「원에서 부채꼴 만들기」 퀘스트를 깨면 열려요.' },
   pizza: { nm: '고양이 피자 가게', ok: () => catAll(qLoad(), 'circ'), need: () => '「원과 부채꼴」 일반 퀘스트를 모두 깨면 열려요.' },
   w3d: { nm: '3D 세계', ok: () => playN('pizza') >= 3, need: () => `고양이 피자 가게를 3번 하면 열려요. (지금 ${Math.min(3, playN('pizza'))} / 3번)` },
   game1: { nm: '회전체 탐정단', ok: () => catAll(qLoad(), 'poly') && catAll(qLoad(), 'plat'), need: () => '「다면체」와 「정다면체」 일반 퀘스트를 모두 깨면 열려요.' },
   game2: { nm: '빙글빙글 회전 화가', ok: () => catAll(qLoad(), 'poly') && catAll(qLoad(), 'plat'), need: () => '「다면체」와 「정다면체」 일반 퀘스트를 모두 깨면 열려요.' },
-  rev: { nm: '3D 도형 세계의 회전체', ok: () => playN('g1') >= 3 && playN('g2') >= 3,
-    need: () => `회전체 탐정단과 빙글빙글 회전 화가를 각각 3번씩 하면 열려요. (지금 ${Math.min(3, playN('g1'))} / 3번, ${Math.min(3, playN('g2'))} / 3번)` },
+  plat: { nm: '3D 도형 세계의 정다면체', ok: () => lockLegacy('plat'), need: () => '선생님이 알려 주는 코드를 입력하면 열려요.' },
+  rev: { nm: '3D 도형 세계의 회전체', ok: () => lockLegacy('rev'), need: () => '선생님이 알려 주는 코드를 입력하면 열려요.' },
   lab: { nm: '아르키메데스 실험실', ok: () => ['r_sv_cyl', 'r_sv_cone', 'r_sv_sph'].every(qd), need: () => '원기둥·원뿔·구의 겉넓이와 부피 확인하기 퀘스트를 모두 깨면 열려요.' },
   game3: { nm: '딱 맞춰 붓기 대작전', ok: () => catAll(qLoad(), 'rev'), need: () => '「회전체」 일반 퀘스트를 모두 깨면 열려요.' },
   // 2D 다각형 자르기: 잠겨 있으면 메뉴에 [자르기]가 아예 안 보임
@@ -10319,6 +10322,7 @@ function lockUI() {
   const lab = document.querySelector('.mode-card[data-go="lab"]');   // 실험실 버튼은 잠겨 있으면 아예 안 보임
   if (lab) { lab.classList.remove('lk'); lab.classList.toggle('hidden', !isOpen('lab')); }
   setLock(document.querySelector('[data-world="3d"]'), 'w3d');
+  setLock(document.querySelector('.rail [data-cat="platonic"]'), 'plat');
   setLock(document.querySelector('.rail [data-cat="rev"]'), 'rev');
   setLock(document.querySelector('[data-fcat="circle"]'), 'circle');
 }
@@ -10334,8 +10338,18 @@ function lockInit() {
     const R = recLoad();
     CLOSET.plays = { tile: ttStore().recs.length, pizza: (R.pizza || []).length, g1: (R.g1 || []).length, g2: (R.g2 || []).length }; closetSave();
   }
+  if (!CLOSET.lockV) {                                             // 11월 잠금 변경: 그 전에 이미 열려 있던 것은 그대로 열어 둠 (한 번만 확인)
+    const op = CLOSET.opened || {}, set = CLOSET.lockSet || {}, was = k => op[k] || set[k] === 'open';
+    CLOSET.legacy = {
+      circle: !!(was('circle') || playN('tile') >= 3),
+      plat: !!(was('w3d') || playN('pizza') >= 3),                // 정다면체는 원래 잠금이 없었음 → 3D 세계가 열려 있었으면 열림
+      rev: !!(was('rev') || (playN('g1') >= 3 && playN('g2') >= 3)),
+    };
+    CLOSET.lockV = 2; closetSave();
+  }
   lockCheck(true);
 }
+function lockLegacy(k) { return !!(CLOSET.legacy || {})[k]; }
 // 잠긴 버튼을 누르면: 열리는 조건만 알려 주고 아무것도 하지 않음
 document.addEventListener('click', e => {
   const el = e.target.closest('.lk'); if (!el) return;
