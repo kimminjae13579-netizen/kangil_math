@@ -269,7 +269,10 @@
   .rec-tbl tr:nth-child(2) td, .rec-tbl tr:nth-child(3) td, .rec-tbl tr:nth-child(4) td { font-weight: 800; }
   .rec-tbl td.big { font-family: "Jua", sans-serif; font-size: 1.1rem; color: #3b22a6; }
   .rec-empty { text-align: center; color: var(--muted); padding: 30px 10px; }
-  /* 업데이트 소식 창 */
+  /* 업데이트 소식 창 + 버튼의 NEW 표시 */
+  [data-updates] { position: relative; }
+  [data-updates].has-new::after { content: "NEW"; position: absolute; top: -9px; right: -10px; background: #ff3b5c; color: #fff; font: 800 .62rem/1 system-ui, sans-serif; letter-spacing: .03em; padding: 3px 5px; border-radius: 999px; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,.2); animation: updPulse 1.4s ease-in-out infinite; }
+  @keyframes updPulse { 50% { transform: scale(1.12); } }
   .modal-box.upd-box { width: min(620px, 100%); background: #fff8ef; }
   .upd-wrap { max-height: 62vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
   .upd-item { background: #fff; border: 2px solid #f0e2cc; border-radius: 16px; padding: 14px 18px; }
@@ -10267,8 +10270,14 @@ const UPDATES = [
     '원을 잠금해제 해야 보물상자가 나옵니다.',
   ]],
 ];
+// 새 소식(맨 위 제목)을 아직 안 열어 봤으면 버튼에 NEW 표시. 창을 한 번 열면 없앰
+const UPD_KEY = 'shape-upd-seen';
+const updSeen = () => { try { return localStorage.getItem(UPD_KEY); } catch (_) { return updSeen.mem; } };
+function updBadge() { document.querySelectorAll('[data-updates]').forEach(b => b.classList.toggle('has-new', updSeen() !== UPDATES[0][0])); }
 document.addEventListener('click', e => {
   if (!e.target.closest('[data-updates]')) return;
+  updSeen.mem = UPDATES[0][0]; try { localStorage.setItem(UPD_KEY, UPDATES[0][0]); } catch (_) {}
+  updBadge();
   hideModals();
   $('updBody').innerHTML = UPDATES.map(([t, list]) => `<div class="upd-item"><h3>${t}</h3><ul>${list.map(s => `<li>${s}</li>`).join('')}</ul></div>`).join('');
   $('updModal').classList.remove('hidden');
@@ -10768,7 +10777,7 @@ function initCoverShapes() {
 if (window.THREE) {
   CYL = new THREE.CylinderGeometry(1, 1, 1, 14, 1);
   SPH = new THREE.SphereGeometry(1, 20, 14);
-  initExplore(); initPad(); initGames(); initExtras(); initVol(); initQuests(); initShop(); hqSync(); qAutoClaim(); lockInit(); initChest(); initG3(); initCoverShapes(); initCoverCat(); coverFriends(); coverFriendsSync();
+  initExplore(); initPad(); initGames(); initExtras(); initVol(); initQuests(); initShop(); hqSync(); qAutoClaim(); updBadge(); lockInit(); initChest(); initG3(); initCoverShapes(); initCoverCat(); coverFriends(); coverFriendsSync();
   loop();
 } else $('noThree').classList.remove('hidden');
 </script>
