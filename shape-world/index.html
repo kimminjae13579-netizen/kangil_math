@@ -484,6 +484,13 @@
   .code-cats button.on { background: #7a4dff; color: #fff; border-color: #7a4dff; }
   .code-hint { margin: 6px 0 0; color: var(--muted); font-size: .88rem; }
   .code-msg { max-height: 46vh; overflow-y: auto; }
+  /* 히든 퀘스트 고르기 (선생님 코드) */
+  .hq-pick { display: flex; flex-direction: column; gap: 6px; }
+  .hq-pick > small { color: var(--muted); }
+  .hq-pick-msg { margin: 0; font-weight: 700; color: #0e8a5f; }
+  .hq-pick button { display: flex; align-items: center; gap: 8px; min-height: 0; padding: 7px 10px; border-radius: 12px; text-align: left; font-size: .92rem; background: #f4f2fb; color: #2a1d66; border: 2px solid #ddd6fb; box-shadow: none; }
+  .hq-pick button small { display: block; color: var(--muted); font-size: .78rem; }
+  .hq-pick button.on { background: #e5fbef; border-color: #8fe0b9; }
   /* 퀘스트 동전 받기 */
   .q-claim { background: #ffe14d; color: #5a3a00; box-shadow: 0 3px 0 #d9a800; font-family: "Jua", sans-serif; font-size: .95rem; padding: 5px 12px; min-height: 0; white-space: nowrap; animation: claimGlow 1s ease-in-out infinite alternate; }
   @keyframes claimGlow { from { transform: scale(1); } to { transform: scale(1.06); } }
@@ -5858,7 +5865,7 @@ document.addEventListener('keydown', e => {
   clearTimeout(qKeyT);
   if (qKeys.length < 6) return;
   qKeyT = setTimeout(() => {
-    if (codeHash(qKeys) !== '1smkddx-4nkeyg') return;
+    if (codeHash(qKeys) !== '16mk66d1wdjwu') return;
     qKeys = ''; qReveal = !qReveal;
     toast(qReveal ? '🔓 히든 퀘스트를 볼 수 있어요! (퀘스트 창)' : '🔒 히든 퀘스트를 다시 숨겼어요.', '#7a4dff');
     if (!$('questModal').classList.contains('hidden')) qRender();
@@ -7625,25 +7632,27 @@ function closetView(on) {
   requestAnimationFrame(loop);
 }
 // ── 설정: 전체 화면, 코드 입력 ──
-// 퀘스트 초기화: 그 테마의 퀘스트 기록을 지우고, 그 퀘스트로 받은 동전만큼 뺌 (가진 동전보다 많으면 0)
-function resetQuests(cat) {                                     // cat: 한 테마, 'all': 모든 퀘스트, 'hidden': 히든 퀘스트만
-  const s = qLoad(), list = QUESTS.filter(q => cat === 'all' || (cat === 'hidden' ? q.hidden : q.cat === cat));
+// 퀘스트 코드가 다루는 퀘스트: 테마 코드·모든 퀘스트 코드는 일반 퀘스트만 (히든 퀘스트는 hiddenPick에서 하나씩 고름)
+const questsOf = cat => QUESTS.filter(q => !q.hidden && (cat === 'all' || q.cat === cat));
+const questsName = cat => cat === 'all' ? '모든 일반' : `「${Q_CATS.find(c => c[0] === cat)[1]}」 일반`;
+// 퀘스트 초기화: 그 퀘스트 기록을 지우고, 그 퀘스트로 받은 동전만큼 뺌 (가진 동전보다 많으면 0). 돌려준 동전 수를 돌려줌
+function resetQuestList(list) {
+  const s = qLoad(), ids = new Set(list.map(q => q.id));
   let back = 0;
   for (const q of list) {
     if (isPaid(q.id)) { back += questCoin(q); delete CLOSET.paid[q.id]; }
     delete s.done[q.id]; delete s.prog[q.id];
   }
-  if (cat === 'rev' || cat === 'all') { delete s.arch; delete s.revcut; delete s.sv; }   // 회전체를 자른 기록, 겉넓이·부피를 확인한 기록도 처음부터
-  if (cat === 'g3' || cat === 'all') delete s.g3ok;               // 오차 2 이하를 낸 도형 기록도 처음부터
-  if (cat === 'pizza' || cat === 'hidden' || cat === 'all') CLOSET.pzPerfect = 0;   // 하트를 안 잃고 끝낸 횟수도 처음부터 (히든 퀘스트 조건)
+  if (list.some(q => q.cat === 'rev' && !q.hidden)) { delete s.arch; delete s.revcut; delete s.sv; }   // 회전체를 자른 기록, 겉넓이·부피를 확인한 기록도 처음부터
+  if (list.some(q => q.cat === 'g3' && !q.hidden)) delete s.g3ok;                                     // 오차 2 이하를 낸 도형 기록도 처음부터
+  if (ids.has('pz_perfect')) CLOSET.pzPerfect = 0;                // 하트를 안 잃고 끝낸 횟수 (피자 히든 퀘스트 조건)
   qStore(s);
   CLOSET.coins = Math.max(0, CLOSET.coins - back); closetSave(); coinsUI(); qRefresh();
-  const nm = cat === 'all' ? '모든' : cat === 'hidden' ? '모든 히든' : `「${Q_CATS.find(c => c[0] === cat)[1]}」`;
-  codeMsg(`📜 ${nm} 퀘스트를 초기화했어요. 동전 ${back}개를 뺐어요. (지금 🪙 ${CLOSET.coins})`, 'ok');
+  return back;
 }
-// 퀘스트 달성: 그 테마의 퀘스트(히든 포함)를 모두 깬 것으로 (동전도 바로 들어옴). cat: 한 테마, 'all': 모든 퀘스트
-function completeQuests(cat) {                                  // cat: 한 테마, 'all': 모든 퀘스트, 'hidden': 히든 퀘스트만
-  const s = qLoad(), list = QUESTS.filter(q => cat === 'all' || (cat === 'hidden' ? q.hidden : q.cat === cat));
+// 퀘스트 달성: 깬 것으로 하고 동전(히든이면 보상도)을 바로 줌. [새로 깬 수, 받은 동전]을 돌려줌
+function completeQuestList(list) {
+  const s = qLoad();
   let n = 0;
   for (const q of list) {
     if (q.goal) s.prog[q.id] = Math.max(s.prog[q.id] || 0, q.goal);
@@ -7653,13 +7662,33 @@ function completeQuests(cat) {                                  // cat: 한 테�
   for (const q of list) hqGrant(q.id, true);                     // 히든 퀘스트 보상(동물 친구·효과·포즈)도 함께
   const coin = claimQuests(list);                                 // 동전도 바로
   qRefresh(); checkTitles(s); lockCheck();                        // 알림은 하나씩 띄우지 않음
-  const nm = cat === 'all' ? '모든' : cat === 'hidden' ? '모든 히든' : `「${Q_CATS.find(c => c[0] === cat)[1]}」`;
-  codeMsg(`🏆 ${nm} 퀘스트를 모두 달성했어요. (새로 달성 ${n}개, 동전 +${coin})`, 'ok');
+  return [n, coin];
 }
-// 퀘스트 코드: 한 번 입력하면 모두 달성, 모두 달성된 상태에서 한 번 더 입력하면 초기화
+// 퀘스트 코드: 한 번 입력하면 그 테마의 일반 퀘스트를 모두 달성, 모두 달성된 상태에서 한 번 더 입력하면 초기화
 function questToggle(cat) {
-  const s = qLoad(), list = QUESTS.filter(q => cat === 'all' || (cat === 'hidden' ? q.hidden : q.cat === cat));
-  if (list.every(q => s.done[q.id])) resetQuests(cat); else completeQuests(cat);
+  const list = questsOf(cat), s = qLoad();
+  if (list.every(q => s.done[q.id])) {
+    const back = resetQuestList(list);
+    codeMsg(`📜 ${questsName(cat)} 퀘스트를 초기화했어요. 동전 ${back}개를 뺐어요. (지금 🪙 ${CLOSET.coins})`, 'ok');
+  } else {
+    const [n, coin] = completeQuestList(list);
+    codeMsg(`🏆 ${questsName(cat)} 퀘스트를 모두 달성했어요. (새로 달성 ${n}개, 동전 +${coin})`, 'ok');
+  }
+}
+// 히든 퀘스트 고르기: 목록에서 누른 히든 퀘스트를 깬 것으로 (이미 깬 것을 누르면 되돌림)
+function hiddenPick(msg = '') {
+  const s = qLoad();
+  codeMsg(`<div class="hq-pick"><b>🌟 히든 퀘스트 고르기</b><small>누른 퀘스트를 깬 것으로 해요. (깬 것을 다시 누르면 되돌려요)</small>
+    ${msg ? `<p class="hq-pick-msg">${msg}</p>` : ''}
+    ${QUESTS.filter(q => q.hidden).map(q => {
+      const done = !!s.done[q.id], rw = hqItem(q.id);
+      return `<button data-hq-pick="${q.id}" class="${done ? 'on' : ''}">${done ? '✅' : '⬜'} <span>${q.t}<small>${Q_CATS.find(c => c[0] === q.cat)[1]}${rw ? ` · 🎁 ${rw.name}` : ''}</small></span></button>`;
+    }).join('')}</div>`);
+}
+function hiddenPickTap(id) {
+  const q = QUESTS.find(x => x.id === id); if (!q) return;
+  if (qLoad().done[id]) { const back = resetQuestList([q]); hiddenPick(`↩️ 「${q.t}」을(를) 되돌렸어요. 동전 ${back}개를 뺐어요.`); }
+  else { const [, coin] = completeQuestList([q]); hiddenPick(`🏆 「${q.t}」을(를) 깬 것으로 했어요. 동전 +${coin}`); }
 }
 // 퀘스트 창에서 히든 퀘스트의 이름과 조건을 보이게 (다시 입력하면 숨김). 키보드 비밀 번호와 같은 스위치(qReveal)
 function toggleRevealHidden() {
@@ -7722,23 +7751,24 @@ function codeHash(s) {
 // 잠금 코드: 열려 있으면 잠그고, 잠겨 있으면 엶 (모든 잠금 코드도 같음: 모두 열려 있으면 모두 잠금)
 function lockToggle(keys) { lockSetCode(keys, keys.every(isOpen) ? 'closed' : 'open'); }
 const CODES = [
-  ['1kowwqt4m58u8', () => allReset()],
-  ['1kdex1goh76p', () => coinAsk(1)], ['rjtgat-21r0hv', () => coinAsk(-1)],
-  // 퀘스트: 테마마다 달성 ↔ 초기화
-  ...[['poly2', '51wjet-hef4g4'], ['circ', 'chc1x-4ttxdk'], ['tile', '2ujryd-2qfyqv'], ['cards', 'ueotz9-n0jc4a'], ['pizza', '723idebz6oo'], ['poly', '1lptu11196w1b'], ['plat', 'pimymd-4i6q5e'],
-    ['rev', 's30qbp-ti5kg2'], ['g1', 's9rtfp-a7cc43'], ['g2', 'n4145h-956j0t'], ['g3', 'f2slz9dmhi47'], ['all', '1sm9br9-bblhto'], ['hidden', '18njxhhtt6yel']].map(([k, h]) => [h, () => questToggle(k)]),
-  ['1igaeklnpqp9j', () => toggleRevealHidden()],
-  ['xtyon9hcrz3i', () => chestDropNow()],
+  ['lf8mklbx91nw', () => allReset()],
+  ['butu85-4n7lzx', () => coinAsk(1)], ['1w16zlx-tpbg8j', () => coinAsk(-1)],
+  // 퀘스트: 테마마다 일반 퀘스트 달성 ↔ 초기화 (히든 퀘스트는 아래 '히든 퀘스트 고르기'로)
+  ...[['poly2', '177py9x-seenlp'], ['circ', '12s57id1angzy'], ['tile', 'd0a3wl-ifq0lo'], ['cards', '7bjdj98x77vn'], ['pizza', '1ksnydheiyn5c'], ['poly', '1cq40jp61bdcv'], ['plat', '1z0eqmdmd8jy1'],
+    ['rev', '1rbm69x3z6epj'], ['g1', '1qd1q2tbu4bz4'], ['g2', '1qfroatdfgpod'], ['g3', '1n0ruf9aptrow'], ['all', 'h6fbglwndwnn']].map(([k, h]) => [h, () => questToggle(k)]),
+  ['1xgioudemulit', () => hiddenPick()],
+  ['22giit-4ey9wd', () => toggleRevealHidden()],
+  ['1pgbsxxfxxeji', () => chestDropNow()],
   // 잠금: 열기 ↔ 잠그기
-  ['1ut81fp-2uow7d', () => lockToggle(Object.keys(LOCKS))],
-  ['knrc91t2hqhh', () => lockSetCode(Object.keys(LOCKS), null)],
-  ...[['tiles', '16qzww53bqnr'], ['circle', '52qk79q85dzv'], ['cards', '2t17lx-aingan'], ['pizza', '1wqwg5-rmvomg'], ['w3d', '3ur3d1-n5nyzn'], ['plat', 'yg2ypx-z5am1n'], ['game1', '1q8n29x-5zjzj'],
-    ['game2', 'sah9hh-f7itwb'], ['rev', '7k7sxx-6h3ard'], ['lab', 'tbba9xi9gqfr'], ['game3', '19l7qrp398i71'], ['cut2d', '3ck6v9-svetud']].map(([k, h]) => [h, () => lockToggle([k])]),
-  ['fypl51qucstq', () => titleAll()], ['cslged-br8yec', () => titleReset()],
-  ['1i2g3et-u65rof', () => titleGive('t_cardm')], ['jz37t1-o7we9a', () => titleGive('t_time')], ['viwpfp1hy7gm', () => titleGive('t_tetris')],
+  ['292bwl44ji20', () => lockToggle(Object.keys(LOCKS))],
+  ['moid6tk9e8yu', () => lockSetCode(Object.keys(LOCKS), null)],
+  ...[['tiles', '1tj5arpykh3as'], ['circle', '1wn6qf99ml1dp'], ['cards', '6y9rr9-x5v39u'], ['pizza', 'wotmf9-tibw5i'], ['w3d', 'h4p41x4wqwnf'], ['plat', 'dgmzb9jm3cwn'], ['game1', '1tyczwl-cum7jq'],
+    ['game2', 'z0s405-l76nhn'], ['rev', 'dx6yf9-twp3bt'], ['lab', '1n9mtad-tbhmmc'], ['game3', '1850zwl-p4p5xs'], ['cut2d', '16iy1c5uvqwq4']].map(([k, h]) => [h, () => lockToggle([k])]),
+  ['a97zd1-qyu4se', () => titleAll()], ['alqzidithrdm', () => titleReset()],
+  ['1gw5745-18evyf', () => titleGive('t_cardm')], ['rk5kqt-2s0md9', () => titleGive('t_time')], ['1xbquytxcggea', () => titleGive('t_tetris')],
   // 상점: 모두 받기 ↔ 초기화
-  ...[['hat', '121i30lh6qig0'], ['top', '7s1079xda3aj'], ['cloud', '18hr5j9-m5gaew'], ['gloves', '1wj0e6dau5s0i'], ['friend', 'wkkshxvmlwz9'], ['trail', 'd92erp-f1q4c5'], ['pose', '1iv48ud7xs0yj']].map(([k, h]) => [h, () => shopToggle(k)]),
-  ['12r0yituy0mzy', () => costumeReset()],
+  ...[['hat', '1c10mdhz2lvf6'], ['top', 'vjdvet6xslie'], ['cloud', '5wsxc5-to87kf'], ['gloves', 'af10lh-4wzicb'], ['friend', 'hps091-x0mc0u'], ['trail', '1ya8fgl-fub23'], ['pose', '146qhc5kxx24c']].map(([k, h]) => [h, () => shopToggle(k)]),
+  ['tj0uv9-8063h', () => costumeReset()],
 ];
 // 상점에서 뽑은 포즈를 모두 지움 (다시 뽑을 수 있음)
 function poseReset() {
@@ -7796,6 +7826,7 @@ function enterCode() {
 function settingsUI() { const fs = !!document.fullscreenElement; $('fsBtn').textContent = fs ? '켜짐' : '꺼짐'; $('fsBtn').classList.toggle('on', fs); }
 function initSettings() {
   document.addEventListener('click', e => { if (e.target.closest('[data-settings]')) { hideModals(); codeMsg(''); settingsUI(); $('settingsModal').classList.remove('hidden'); } });
+  $('codeMsg').addEventListener('click', e => { const b = e.target.closest('[data-hq-pick]'); if (b) hiddenPickTap(b.dataset.hqPick); });   // 히든 퀘스트 고르기
   $('fsBtn').onclick = () => {
     if (document.fullscreenElement) document.exitFullscreen();
     else document.documentElement.requestFullscreen?.().catch(() => alert('이 브라우저에서는 전체 화면을 쓸 수 없어요. F11 키를 눌러 보세요.'));
