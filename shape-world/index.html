@@ -116,6 +116,17 @@
   .title-card.own.tier-myth { background: #111; color: #f5f5f5; border-color: #ffcf3d; }
   .title-card.own.tier-myth b { color: #ffcf3d; } .title-card.own.tier-myth small { color: #e8e2c8; }
   .title-card.own.tier-myth .ti { background: #2a2a2a; }
+  /* 신화 칭호: 월계관 명패 (검정 바탕 금색 명패 + 양옆 금색 월계수 잎 + 빛이 쓱 지나감) */
+  .myth-plate { display: inline-flex; align-items: center; vertical-align: middle; font-family: "Jua", sans-serif; }
+  .myth-plate .lf { width: 1.8em; height: 2.4em; flex: none; }
+  .myth-plate .lf.r { transform: scaleX(-1); }
+  .myth-plate .pl { position: relative; overflow: hidden; margin: 0 -.15em; padding: .32em .95em; border-radius: 6px; background: #14102a; color: #ffd84d; white-space: nowrap;
+    border: 2px solid #e0b030; box-shadow: inset 0 0 0 3px #14102a, inset 0 0 0 4px rgba(255,207,61,.5); }
+  .myth-plate .pl::after { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 35%, rgba(255,255,255,.7) 50%, transparent 65%); background-size: 250% 100%; animation: mythShine 2.6s ease-in-out infinite; pointer-events: none; }
+  @keyframes mythShine { 0% { background-position: 150% 0; } 60%, 100% { background-position: -100% 0; } }
+  @media (prefers-reduced-motion: reduce) { .myth-plate .pl::after { animation: none; } }
+  .cover-title.myth { background: none; border: 0; padding: 0; top: -20px; font-size: 1.15rem; }
+  .title-card.own.tier-myth b .myth-plate { font-size: 1.05rem; }
   .start-btn { margin-top: 16px; font-family: "Jua", sans-serif; font-size: 1.7rem; padding: 12px 40px; border-radius: 999px; background: linear-gradient(180deg, #7dffb5, #18b981); color: #064a33; box-shadow: 0 7px 0 #0e8a5f, 0 14px 24px rgba(0,0,0,.25); animation: startPulse 1.4s ease-in-out infinite; }
   @keyframes startPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
   @media (prefers-reduced-motion: reduce) { .sky i, .sky .cl, .hs, .start-btn, .cover h1.logo { animation: none !important; } }
@@ -5691,23 +5702,50 @@ function titleRender() {
     const own = !!have[t.id], on = CLOSET.title === t.id, k = tTier(t);
     return `<div class="title-card tier-${k} ${own ? 'own' : ''} ${on ? 'on' : ''}">
       <span class="ti">${own ? t.ic : '🔒'}</span>
-      <span class="tx"><b>${t.name}</b><small>${own ? t.d : '???'}</small></span>
+      <span class="tx"><b>${own && k === 'myth' ? mythPlate(t.name) : t.name}</b><small>${own ? t.d : '???'}</small></span>
       <span class="tt tier-${k}">${tTierName(t)}</span>
       ${own ? `<button data-title-wear="${t.id}" class="${on ? 'own' : ''}">${on ? '다는 중 ✓' : '달기'}</button>` : '<span class="lock">아직</span>'}
     </div>`;
   }).join('');
 }
-// 고양이 머리 위 칭호 이름표 (3D 그림). 단 칭호는 하나뿐이라 이름표도 하나
+// 신화 칭호 월계관 명패 (HTML): 양옆 금색 월계수 잎 + 검정 명패. 오른쪽 잎은 왼쪽 잎을 뒤집어서 씀
+const LAUREL_SVG = '<svg class="lf" viewBox="0 0 30 40" aria-hidden="true"><path d="M27 39 Q7 31 9 3" fill="none" stroke="#e0b030" stroke-width="2.2" stroke-linecap="round"/>'
+  + [[10, 6, -20], [5, 12, 35], [11, 15, -35], [6, 22, 45], [14, 24, -50], [10, 31, 60], [19, 32, -65]].map(([x, y, r]) => `<ellipse cx="${x}" cy="${y}" rx="2.6" ry="5.4" transform="rotate(${r} ${x} ${y})" fill="#ffcf3d" stroke="#b8860b" stroke-width=".6"/>`).join('') + '</svg>';
+const mythPlate = txt => `<span class="myth-plate">${LAUREL_SVG}<span class="pl">${txt}</span>${LAUREL_SVG.replace('class="lf"', 'class="lf r"')}</span>`;
+// 캔버스에 월계수 가지 하나 (dir 1: 왼쪽 가지, -1: 오른쪽 가지). (x, y)는 가지 밑동, h는 높이
+function drawLaurel(g, x, y, h, dir) {
+  const k = h / 40, P = (px, py) => [x + dir * (px - 27) * k, y + (py - 39) * k];
+  g.strokeStyle = '#e0b030'; g.lineWidth = 2.6 * k; g.lineCap = 'round';
+  g.beginPath(); g.moveTo(...P(27, 39)); g.quadraticCurveTo(...P(7, 31), ...P(9, 3)); g.stroke();
+  for (const [lx, ly, r] of [[10, 6, -20], [5, 12, 35], [11, 15, -35], [6, 22, 45], [14, 24, -50], [10, 31, 60], [19, 32, -65]]) {
+    const [cx, cy] = P(lx, ly);
+    g.beginPath(); g.ellipse(cx, cy, 2.8 * k, 5.6 * k, dir * r * Math.PI / 180, 0, Math.PI * 2);
+    g.fillStyle = '#ffcf3d'; g.fill(); g.strokeStyle = '#b8860b'; g.lineWidth = .8 * k; g.stroke();
+  }
+}
+// 고양이 머리 위 칭호 이름표 (3D 그림). 단 칭호는 하나뿐이라 이름표도 하나. 신화 칭호는 월계관 명패
 function titleSprite(t) {
-  const [edge, bg, fg] = T_COL[tTier(t)];
+  const [edge, bg, fg] = T_COL[tTier(t)], myth = tTier(t) === 'myth';
   const fs = 56, cv = document.createElement('canvas'), g = cv.getContext('2d'), font = `700 ${fs}px "Jua", "Malgun Gothic", sans-serif`, txt = `${t.ic} ${t.name}`;
-  g.font = font; const w = Math.ceil(g.measureText(txt).width) + 56, h = fs + 30;
-  cv.width = w; cv.height = h; g.font = font;
-  g.fillStyle = bg; g.strokeStyle = edge; g.lineWidth = 6;
-  g.beginPath(); g.roundRect(4, 4, w - 8, h - 8, h / 2 - 4); g.fill(); g.stroke();
-  g.fillStyle = fg; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, w / 2, h / 2 + 3);
+  g.font = font; const tw = Math.ceil(g.measureText(txt).width), h = fs + 30, lw = myth ? Math.round(h * .9) : 0, w = tw + 56 + lw * 2;
+  cv.width = w; cv.height = h + (myth ? 16 : 0); g.font = font;
+  const top = myth ? 8 : 0;
+  if (myth) {
+    drawLaurel(g, lw + 6, top + h, h, 1); drawLaurel(g, w - lw - 6, top + h, h, -1);
+    g.fillStyle = '#14102a'; g.strokeStyle = '#e0b030'; g.lineWidth = 6;
+    g.beginPath(); g.roundRect(lw, top + 4, w - lw * 2, h - 8, 12); g.fill(); g.stroke();
+    g.strokeStyle = 'rgba(255,207,61,.5)'; g.lineWidth = 2;
+    g.beginPath(); g.roundRect(lw + 9, top + 13, w - lw * 2 - 18, h - 26, 7); g.stroke();
+    g.fillStyle = '#ffd84d';
+  } else {
+    g.fillStyle = bg; g.strokeStyle = edge; g.lineWidth = 6;
+    g.beginPath(); g.roundRect(4, 4, w - 8, h - 8, h / 2 - 4); g.fill(); g.stroke();
+    g.fillStyle = fg;
+  }
+  g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, w / 2, top + h / 2 + 3);
+  const H0 = .3, H = H0 * cv.height / h;
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), depthTest: false, transparent: true }));
-  const H = .3; sp.scale.set(H * w / h, H, 1); sp.renderOrder = 19; return sp;
+  sp.scale.set(H0 * w / h, H, 1); sp.renderOrder = 19; return sp;
 }
 const catTitleY = () => CLOSET.worn.hat ? 2.0 : 1.72;             // 모자를 쓰면 조금 더 위로
 function catTitleSet(c) {
@@ -10326,6 +10364,9 @@ document.addEventListener('click', e => {
 });
 // ── 📢 업데이트 소식: 첫 화면 [업데이트] 버튼. 새 소식은 맨 위에 하나씩 추가 ──
 const UPDATES = [
+  ['11월 9일 업데이트', [
+    '신화 칭호 디자인이 바뀌었습니다.',
+  ]],
   ['11월 5일 업데이트', [
     '퀘스트를 깨면 동전이 자동으로 들어옵니다.',
     '잠금해제 조건이 변경되었습니다. 2D 세계의 「원」과 3D 세계의 「정다면체」·「회전체」는 선생님이 알려 주는 코드를 입력해야 열립니다. (이미 열려 있던 경우는 그대로 열려 있습니다.)',
@@ -10687,6 +10728,7 @@ function coverTitleUI() {
   const el = $('coverTitle'); if (!el) return;
   const t = wornTitle();
   if (!t) { el.className = 'cover-title hidden'; return; }
+  if (tTier(t) === 'myth') { el.className = 'cover-title myth'; el.innerHTML = mythPlate(`${t.ic} ${t.name}`); return; }
   el.className = 'cover-title tier-' + tTier(t); el.textContent = `${t.ic} ${t.name}`;
 }
 // 표지 고양이: 지금 입은 옷을 입고 구름을 타고 둥실 떠 있음 (표지가 보일 때만 그림)
