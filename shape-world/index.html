@@ -120,13 +120,35 @@
   .myth-plate { display: inline-flex; align-items: center; vertical-align: middle; font-family: "Jua", sans-serif; }
   .myth-plate .lf { width: 1.8em; height: 2.4em; flex: none; }
   .myth-plate .lf.r { transform: scaleX(-1); }
-  .myth-plate .pl { position: relative; overflow: hidden; margin: 0 -.15em; padding: .32em .95em; border-radius: 6px; background: #14102a; color: #ffd84d; white-space: nowrap;
+  .myth-plate .pl { position: relative; overflow: hidden; display: inline-flex; align-items: center; gap: .1em; margin: 0 -.15em; padding: .32em .95em; border-radius: 999px; background: #14102a; color: #ffd84d; white-space: nowrap;
     border: 2px solid #e0b030; box-shadow: inset 0 0 0 3px #14102a, inset 0 0 0 4px rgba(255,207,61,.5); }
   .myth-plate .pl::after { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 35%, rgba(255,255,255,.7) 50%, transparent 65%); background-size: 250% 100%; animation: mythShine 2.6s ease-in-out infinite; pointer-events: none; }
   @keyframes mythShine { 0% { background-position: 150% 0; } 60%, 100% { background-position: -100% 0; } }
-  @media (prefers-reduced-motion: reduce) { .myth-plate .pl::after { animation: none; } }
+  /* 명패 위 문장(칭호마다 다른 그림)과 명패 안 움직이는 아이콘 */
+  .myth-wrap { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; }
+  .myth-crest { display: block; margin-bottom: -.45em; position: relative; z-index: 1; overflow: visible; }
+  .myth-plate .mc-ic { width: 1.3em; height: 1.3em; flex: none; }
+  .mc-spin { animation: mcSpin 10s linear infinite; transform-box: fill-box; transform-origin: center; }
+  .mc-tw { animation: mcTw 1.6s ease-in-out infinite; }
+  .mc-flip { animation: mcFlip 3.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  .mc-tick { animation: mcTick 6s steps(12) infinite; transform-origin: 12px 12px; }
+  .mc-glow { animation: mcGlow 2.4s ease-in-out infinite; }
+  .mc-sand { animation: mcSand 4s linear infinite; transform-origin: 4px 4px; }
+  .mc-bob { animation: mcBob 3s ease-in-out infinite; }
+  .mc-drop { animation: mcDrop 2.6s ease-in infinite; }
+  @keyframes mcSpin { to { transform: rotate(360deg); } }
+  @keyframes mcTw { 0%, 100% { opacity: .2; } 50% { opacity: 1; } }
+  @keyframes mcFlip { 0%, 72% { transform: scaleX(1); } 80% { transform: scaleX(0); } 88%, 100% { transform: scaleX(1); } }
+  @keyframes mcTick { to { transform: rotate(360deg); } }
+  @keyframes mcGlow { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+  @keyframes mcSand { from { transform: scaleY(1); } to { transform: scaleY(.2); } }
+  @keyframes mcBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1.5px); } }
+  @keyframes mcDrop { 0% { transform: translateY(-14px); opacity: 0; } 25% { opacity: 1; } 55%, 100% { transform: translateY(0); } }
+  @media (prefers-reduced-motion: reduce) { .myth-plate .pl::after, .mc-spin, .mc-tw, .mc-flip, .mc-tick, .mc-glow, .mc-sand, .mc-bob, .mc-drop { animation: none; } }
   .cover-title.myth { background: none; border: 0; padding: 0; top: -20px; font-size: 1.15rem; }
-  .title-card.own.tier-myth b .myth-plate { font-size: 1.05rem; }
+  .cover-title.myth:has(.myth-crest) { top: 12px; }                  /* 첫 화면: 문장이 있으면 제목 글자를 가리지 않게 조금 아래로 */
+  .cover-title.myth .myth-crest { margin-top: -2.2em; }               /* 명패 자리는 그대로, 문장만 위로 */
+  .title-card.own.tier-myth b .myth-wrap { font-size: 1.05rem; }
   .start-btn { margin-top: 16px; font-family: "Jua", sans-serif; font-size: 1.7rem; padding: 12px 40px; border-radius: 999px; background: linear-gradient(180deg, #7dffb5, #18b981); color: #064a33; box-shadow: 0 7px 0 #0e8a5f, 0 14px 24px rgba(0,0,0,.25); animation: startPulse 1.4s ease-in-out infinite; }
   @keyframes startPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
   @media (prefers-reduced-motion: reduce) { .sky i, .sky .cl, .hs, .start-btn, .cover h1.logo { animation: none !important; } }
@@ -3575,7 +3597,7 @@ function startEmote(k, w = 'ex') {
   if (fl) FL.wander = { to: [c.g.position.x, -c.g.position.z], at: now, until: now + 2500 };   // 끝나고 잠깐 그 자리에 있음
   else { EXC.jobs = []; EXC.job = null; EXC.wander = { to: c.g.position.clone().setY(0), at: now, until: now + 2500 }; }
   H.emote = { k, t0: now, dur: EMOTES[k].dur, r0: c.g.rotation.y, bubble: catBubble(EMOTES[k].say) };
-  if (c.titleSp) H.emote.bubble.position.y = c.titleSp.position.y + .45;   // 칭호 이름표가 있으면 그 위로
+  if (c.titleSp) H.emote.bubble.position.y = c.titleSp.position.y + Math.max(.45, (c.titleSp.userData.above || 0) + .3);   // 칭호 이름표(신화 칭호는 위 문장까지)가 있으면 그 위로
   c.g.add(H.emote.bubble);
 }
 function endEmote(w = 'ex') {
@@ -5702,7 +5724,7 @@ function titleRender() {
     const own = !!have[t.id], on = CLOSET.title === t.id, k = tTier(t);
     return `<div class="title-card tier-${k} ${own ? 'own' : ''} ${on ? 'on' : ''}">
       <span class="ti">${own ? t.ic : '🔒'}</span>
-      <span class="tx"><b>${own && k === 'myth' ? mythPlate(t.name) : t.name}</b><small>${own ? t.d : '???'}</small></span>
+      <span class="tx"><b>${own && k === 'myth' ? mythPlate(t) : t.name}</b><small>${own ? t.d : '???'}</small></span>
       <span class="tt tier-${k}">${tTierName(t)}</span>
       ${own ? `<button data-title-wear="${t.id}" class="${on ? 'own' : ''}">${on ? '다는 중 ✓' : '달기'}</button>` : '<span class="lock">아직</span>'}
     </div>`;
@@ -5711,7 +5733,51 @@ function titleRender() {
 // 신화 칭호 월계관 명패 (HTML): 양옆 금색 월계수 잎 + 검정 명패. 오른쪽 잎은 왼쪽 잎을 뒤집어서 씀
 const LAUREL_SVG = '<svg class="lf" viewBox="0 0 30 40" aria-hidden="true"><path d="M27 39 Q7 31 9 3" fill="none" stroke="#e0b030" stroke-width="2.2" stroke-linecap="round"/>'
   + [[10, 6, -20], [5, 12, 35], [11, 15, -35], [6, 22, 45], [14, 24, -50], [10, 31, 60], [19, 32, -65]].map(([x, y, r]) => `<ellipse cx="${x}" cy="${y}" rx="2.6" ry="5.4" transform="rotate(${r} ${x} ${y})" fill="#ffcf3d" stroke="#b8860b" stroke-width=".6"/>`).join('') + '</svg>';
-const mythPlate = txt => `<span class="myth-plate">${LAUREL_SVG}<span class="pl">${txt}</span>${LAUREL_SVG.replace('class="lf"', 'class="lf r"')}</span>`;
+// 신화 칭호마다 명패 위에 얹는 작은 문장 (w·h: 그림 크기, 명패 글자 18px 기준). 움직임은 mc-* 클래스(CSS)
+const MYTH_CREST = {
+  t_cardm: { w: 64, h: 44, svg:                                   // 카드마스터: 왕관 쓴 에이스 카드 + 양옆 카드
+    `<g class="mc-spin" opacity=".45"><path d="M32 4 L35 20 L32 22 L29 20Z M60 22 L44 25 L42 22 L44 19Z M4 22 L20 19 L22 22 L20 25Z" fill="#ffcf3d"/></g>
+    <rect x="13" y="13" width="16" height="23" rx="3" fill="#fffaf0" stroke="#e0b030" stroke-width="1.5" transform="rotate(-20 21 25)"/>
+    <rect x="35" y="13" width="16" height="23" rx="3" fill="#fffaf0" stroke="#e0b030" stroke-width="1.5" transform="rotate(20 43 25)"/>
+    <g class="mc-flip"><rect x="22" y="9" width="20" height="30" rx="3" fill="#14102a" stroke="#ffcf3d" stroke-width="2"/><text x="32" y="30" text-anchor="middle" font-size="16" font-weight="700" font-family="sans-serif" fill="#ffd84d">A</text></g>
+    <path d="M25 8 L27 2 L32 6 L37 2 L39 8Z" fill="#ffcf3d"/>
+    <circle class="mc-tw" cx="8" cy="8" r="1.5" fill="#fff"/><circle class="mc-tw" cx="57" cy="6" r="1.3" fill="#fff" style="animation-delay:.7s"/>` },
+  t_time: { w: 96, h: 42, svg:                                    // 시간 관리자: 시간의 신전 앞에 두건 쓴 신전지기 (모래시계 지팡이). 기둥은 낮게
+    `<g transform="translate(0 -14)">
+    <g transform="translate(0 15.5)"><path d="M14 18 L48 4 L82 18Z" fill="#e0b030" stroke="#b8860b" stroke-width="1"/>
+    <circle cx="48" cy="13" r="3.2" fill="#14102a" stroke="#ffcf3d" stroke-width="1"/><line x1="48" y1="13" x2="48" y2="10.8" stroke="#ffcf3d" stroke-width=".8"/>
+    <rect x="16" y="18" width="64" height="3" fill="#b8860b"/></g>
+    <g fill="#c99a2a"><rect x="19" y="36.5" width="5" height="15.5"/><rect x="72" y="36.5" width="5" height="15.5"/><rect x="29" y="36.5" width="5" height="15.5"/><rect x="62" y="36.5" width="5" height="15.5"/></g>
+    <rect x="14" y="52" width="68" height="4" fill="#b8860b"/>
+    <g transform="translate(48 54) scale(.6) translate(-48 -54)"><g class="mc-bob"><path d="M48 22 C39 22 36 31 36 40 L34 54 L62 54 L60 40 C60 31 57 22 48 22Z" fill="#3a2a6a" stroke="#ffcf3d" stroke-width="1.2"/>
+    <path d="M48 25 C42 25 40.5 31 41 36 C43 39 53 39 55 36 C55.5 31 54 25 48 25Z" fill="#0d0a1c"/>
+    <g class="mc-glow"><circle cx="45.3" cy="33" r="1.4" fill="#ffd84d"/><circle cx="50.7" cy="33" r="1.4" fill="#ffd84d"/></g>
+    <path d="M44 44 L52 44 L50 52 L46 52Z" fill="#2c1f55"/>
+    <line x1="60" y1="30" x2="60" y2="54" stroke="#e0b030" stroke-width="1.6"/>
+    <g transform="translate(56 22)"><path d="M0 0 L8 0 L4 4 L8 8 L0 8 L4 4Z" fill="#fffaf0" stroke="#e0b030" stroke-width="1"/><g class="mc-sand"><path d="M1.5 1 L6.5 1 L4 3.5Z" fill="#ffcf3d"/></g></g></g></g></g>
+    <circle class="mc-tw" cx="6" cy="14" r="1.4" fill="#fff"/><circle class="mc-tw" cx="90" cy="10" r="1.3" fill="#fff" style="animation-delay:.8s"/>` },
+  t_tetris: { w: 64, h: 44, svg:                                  // 테트리스 1인자: 블록으로 쌓은 왕관 (마지막 블록이 떨어짐)
+    `<g class="mc-spin" opacity=".45"><path d="M32 2 L35 16 L32 18 L29 16Z M62 26 L48 28 L46 25 L48 22Z M2 26 L16 22 L18 25 L16 28Z" fill="#ffcf3d"/></g>
+    <g stroke="#14102a" stroke-width="1">
+    <rect x="14" y="32" width="9" height="9" fill="#ff5a5a"/><rect x="23" y="32" width="9" height="9" fill="#ffcf3d"/><rect x="32" y="32" width="9" height="9" fill="#ffcf3d"/><rect x="41" y="32" width="9" height="9" fill="#18b981"/>
+    <rect x="14" y="23" width="9" height="9" fill="#ff5a5a"/><rect x="14" y="14" width="9" height="9" fill="#a259ff"/>
+    <rect x="27.5" y="23" width="9" height="9" fill="#ffcf3d"/><rect x="27.5" y="14" width="9" height="9" fill="#3d7bff"/><rect x="27.5" y="5" width="9" height="9" fill="#3d7bff"/>
+    <rect x="41" y="23" width="9" height="9" fill="#18b981"/><g class="mc-drop"><rect x="41" y="14" width="9" height="9" fill="#a259ff"/></g></g>
+    <circle class="mc-tw" cx="6" cy="10" r="1.4" fill="#fff"/><circle class="mc-tw" cx="58" cy="8" r="1.3" fill="#fff" style="animation-delay:.6s"/>` },
+};
+// 명패 안 아이콘을 움직이는 그림으로 바꾸는 칭호 (시간 관리자: 초침이 째깍째깍 도는 금시계)
+const MYTH_ICON = {
+  t_time: `<svg class="mc-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#e0b030"/><circle cx="12" cy="12" r="8.5" fill="#fffaf0"/>
+    <g fill="#14102a"><circle cx="12" cy="5.3" r=".9"/><circle cx="18.7" cy="12" r=".9"/><circle cx="12" cy="18.7" r=".9"/><circle cx="5.3" cy="12" r=".9"/></g>
+    <line x1="12" y1="12" x2="8.8" y2="8.5" stroke="#14102a" stroke-width="1.6" stroke-linecap="round"/>
+    <g class="mc-tick"><line x1="12" y1="13.5" x2="12" y2="4.5" stroke="#c0392b" stroke-width="1" stroke-linecap="round"/></g><circle cx="12" cy="12" r="1.2" fill="#14102a"/></svg>`,
+};
+// 신화 칭호 명패: 위에 문장, 양옆 월계관, 둥근 검정 명패. withIcon: 칭호 아이콘도 명패 안에 (칭호 창에서는 왼쪽에 따로 있어서 뺌)
+function mythPlate(t, withIcon) {
+  const c = MYTH_CREST[t.id], ic = MYTH_ICON[t.id] || (withIcon ? t.ic : '');
+  const crest = c ? `<svg class="myth-crest" viewBox="0 0 ${c.w} ${c.h}" style="height:${(c.h / 18).toFixed(2)}em;width:${(c.w / 18).toFixed(2)}em" aria-hidden="true">${c.svg}</svg>` : '';
+  return `<span class="myth-wrap">${crest}<span class="myth-plate">${LAUREL_SVG}<span class="pl">${ic ? ic + ' ' : ''}${t.name}</span>${LAUREL_SVG.replace('class="lf"', 'class="lf r"')}</span></span>`;
+}
 // 캔버스에 월계수 가지 하나 (dir 1: 왼쪽 가지, -1: 오른쪽 가지). (x, y)는 가지 밑동, h는 높이
 function drawLaurel(g, x, y, h, dir) {
   const k = h / 40, P = (px, py) => [x + dir * (px - 27) * k, y + (py - 39) * k];
@@ -5727,15 +5793,18 @@ function drawLaurel(g, x, y, h, dir) {
 function titleSprite(t) {
   const [edge, bg, fg] = T_COL[tTier(t)], myth = tTier(t) === 'myth';
   const fs = 56, cv = document.createElement('canvas'), g = cv.getContext('2d'), font = `700 ${fs}px "Jua", "Malgun Gothic", sans-serif`, txt = `${t.ic} ${t.name}`;
-  g.font = font; const tw = Math.ceil(g.measureText(txt).width), h = fs + 30, lw = myth ? Math.round(h * .9) : 0, w = tw + 56 + lw * 2;
-  cv.width = w; cv.height = h + (myth ? 16 : 0); g.font = font;
-  const top = myth ? 8 : 0;
+  g.font = font; const tw = Math.ceil(g.measureText(txt).width), h = fs + 30, lw = myth ? Math.round(h * .9) : 0;
+  // 신화 칭호의 문장: 명패 높이(글자 18px일 때 약 34px)에 맞춘 크기로 명패 위에 살짝 걸침
+  const C = myth && MYTH_CREST[t.id], ch = C ? Math.round(h * C.h / 34) : 0, cw = C ? Math.round(ch * C.w / C.h) : 0, lap = C ? Math.round(h * 8 / 34) : 0;
+  const w = Math.max(tw + 56 + lw * 2, cw + 8);
+  const top = myth ? 8 + Math.max(0, ch - lap) : 0;
+  cv.width = w; cv.height = top + h + (myth ? 8 : 0); g.font = font;
   if (myth) {
     drawLaurel(g, lw + 6, top + h, h, 1); drawLaurel(g, w - lw - 6, top + h, h, -1);
     g.fillStyle = '#14102a'; g.strokeStyle = '#e0b030'; g.lineWidth = 6;
-    g.beginPath(); g.roundRect(lw, top + 4, w - lw * 2, h - 8, 12); g.fill(); g.stroke();
+    g.beginPath(); g.roundRect(lw, top + 4, w - lw * 2, h - 8, (h - 8) / 2); g.fill(); g.stroke();
     g.strokeStyle = 'rgba(255,207,61,.5)'; g.lineWidth = 2;
-    g.beginPath(); g.roundRect(lw + 9, top + 13, w - lw * 2 - 18, h - 26, 7); g.stroke();
+    g.beginPath(); g.roundRect(lw + 9, top + 13, w - lw * 2 - 18, h - 26, (h - 26) / 2); g.stroke();
     g.fillStyle = '#ffd84d';
   } else {
     g.fillStyle = bg; g.strokeStyle = edge; g.lineWidth = 6;
@@ -5743,9 +5812,17 @@ function titleSprite(t) {
     g.fillStyle = fg;
   }
   g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, w / 2, top + h / 2 + 3);
-  const H0 = .3, H = H0 * cv.height / h;
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), depthTest: false, transparent: true }));
-  sp.scale.set(H0 * w / h, H, 1); sp.renderOrder = 19; return sp;
+  const H0 = .3, H = H0 * cv.height / h, tex = new THREE.CanvasTexture(cv);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
+  sp.scale.set(H0 * w / h, H, 1); sp.renderOrder = 19;
+  sp.center.set(.5, 1 - (top + h / 2) / cv.height);              // 명패 가운데가 이름표 자리 (문장은 그 위로)
+  sp.userData.above = H0 * (top + h / 2) / h;                      // 이름표 자리에서 그림 맨 위까지 (말풍선을 그 위에 띄움)
+  if (C) {                                                        // 문장 그림(SVG)은 불러온 뒤 명패 위에 그려 넣음 (멈춘 그림)
+    const im = new Image();
+    im.onload = () => { g.drawImage(im, (w - cw) / 2, 8 + Math.max(0, top - 8 - ch), cw, ch); tex.needsUpdate = true; };
+    im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${C.w} ${C.h}" width="${cw}" height="${ch}">${C.svg}</svg>`);
+  }
+  return sp;
 }
 const catTitleY = () => CLOSET.worn.hat ? 2.0 : 1.72;             // 모자를 쓰면 조금 더 위로
 function catTitleSet(c) {
@@ -7483,7 +7560,7 @@ function cosCard(it, btn, worn, cls = '') {
     <b>${it.name}</b><span class="tier">${gradeLabel(gachaGrade(it))}</span>${btn}</div>`;
 }
 // ── 뽑기 ── 종류마다 뽑기 기계가 따로 있고, 이미 가진 옷은 다시 나오지 않음
-const GACHA_PRICE = { hat: 25, gloves: 25, top: 35, cloud: 35, friend: 0, trail: 30, pose: 25 };   // 동물 친구는 뽑기 없음 (히든 퀘스트 보상)
+const GACHA_PRICE = { hat: 40, gloves: 40, top: 50, cloud: 50, friend: 0, trail: 45, pose: 40 };   // 동물 친구는 뽑기 없음 (히든 퀘스트 보상). 11월 10일에 모두 15원씩 올림
 // 동물 친구 뽑기 (첫 화면에는 뽑았는지와 상관없이 친구들이 모두 나옴)
 const FRIENDS = [
   { id: 'f_dog', cat: 'friend', k: 'dog', name: '강아지', stars: 1 },
@@ -10364,8 +10441,9 @@ document.addEventListener('click', e => {
 });
 // ── 📢 업데이트 소식: 첫 화면 [업데이트] 버튼. 새 소식은 맨 위에 하나씩 추가 ──
 const UPDATES = [
-  ['11월 9일 업데이트', [
-    '신화 칭호 디자인이 바뀌었습니다.',
+  ['11월 10일 업데이트', [
+    '상점에서 뽑기 금액이 올랐습니다.',
+    '신화 등급 칭호 디자인이 수정되었습니다.',
   ]],
   ['11월 5일 업데이트', [
     '퀘스트를 깨면 동전이 자동으로 들어옵니다.',
@@ -10728,7 +10806,7 @@ function coverTitleUI() {
   const el = $('coverTitle'); if (!el) return;
   const t = wornTitle();
   if (!t) { el.className = 'cover-title hidden'; return; }
-  if (tTier(t) === 'myth') { el.className = 'cover-title myth'; el.innerHTML = mythPlate(`${t.ic} ${t.name}`); return; }
+  if (tTier(t) === 'myth') { el.className = 'cover-title myth'; el.innerHTML = mythPlate(t, true); return; }
   el.className = 'cover-title tier-' + tTier(t); el.textContent = `${t.ic} ${t.name}`;
 }
 // 표지 고양이: 지금 입은 옷을 입고 구름을 타고 둥실 떠 있음 (표지가 보일 때만 그림)
