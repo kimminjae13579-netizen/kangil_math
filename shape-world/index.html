@@ -5560,6 +5560,7 @@ const QUESTS = [
   { cat: 'circ', id: 's_cmp_arc', t: '떼어 낸 호끼리 겹쳐서 길이 비교하기', d: '부채꼴의 호를 눌러 떼어 낸 뒤 다른 호 위에 겹쳐 놓아요.', coin: 15, ic: '🌈' },
   { cat: 'circ', id: 's_dbl_arc', t: '중심각의 크기가 2배인 호와 겹쳐 길이 비교하기', d: '반지름이 같고 중심각의 크기가 2배인 두 부채꼴의 호를 떼어 내 겹쳐 놓아요.', coin: 15, ic: '🌈' },
   { cat: 'circ', id: 's_chord_prop', t: '중심각의 크기가 2배인 현과 겹쳐 길이 비교하기', d: '중심각이 2배인 두 부채꼴의 현을 떼어 겹친 뒤 [확인하기]에서 작은 현 두 개를 이어 붙여 큰 현과 비교해요.', coin: 30, ic: '📐' },
+  { cat: 'circ', id: 's_dbl_over', t: '중심각의 크기가 2배인 두 부채꼴 겹치기', d: '반지름이 같고 중심각의 크기가 2배인 두 부채꼴을 중심을 맞춰 겹쳐 놓아요.', coin: 15, ic: '🍰' },
   { cat: 'circ', id: 's_circle', t: '부채꼴끼리 합쳐서 원 만들기', d: '중심각의 합이 360°가 되도록 합쳐요.', hidden: true, coin: 50, ic: '⭕' },
   { cat: 'circ', id: 'c_pi', t: '원주율 π의 비밀 찾기', d: '구부러진 지름 3개를 하나씩 원주에 가져다 대요.', hidden: true, coin: 100, ic: '🥧' },
   // ── 카드 짝 맞추기 (카드게임이 끝나면 걸린 시간·오답·폭탄 수를 받아서) ──
@@ -8906,7 +8907,7 @@ function flPartDrop(P) {
   for (const Q of FL.hcs) {
     if (Q === P) continue;
     const [b0, b1] = partEnds(Q), d = Math.min(Math.hypot(mid[0] - Q.x, mid[1] - Q.y), Math.hypot(a0[0] - b0[0], a0[1] - b0[1]), Math.hypot(a1[0] - b1[0], a1[1] - b1[1]), Math.hypot(a0[0] - b1[0], a0[1] - b1[1]), Math.hypot(a1[0] - b0[0], a1[1] - b0[1]));
-    if (d < .25 && (!best || d < best.d)) best = { Q, d };         // 꽤 가까이 놓아야 겹쳐짐
+    if (d < .45 && (!best || d < best.d)) best = { Q, d };         // 가까이 놓으면 겹쳐짐 (예전 .25보다 넉넉하게)
   }
   if (!best) { flPartPlace(P); return; }
   const st = best.Q.stack || [best.Q];
@@ -9094,9 +9095,18 @@ function clCheck() {
     <p>중심각은 ${x}°에서 ${2 * x}°로 <b>2배</b>가 되었지만, 현의 길이는 <b>2배보다 짧아요</b>. 삼각형 ABC에서 두 변의 길이의 합(AB + BC)은 나머지 한 변(AC)의 길이보다 항상 길기 때문이에요.</p>
     <div class="key">한 원에서 호의 길이와 부채꼴의 넓이는 중심각의 크기에 정비례하지만, <b>현의 길이는 중심각의 크기에 정비례하지 않아요</b>.</div>`;
   const first = !qLoad().done.s_chord_prop;
-  if (first) $('clRes').innerHTML += '<p class="cl-hq">🎉 퀘스트 완료! 「중심각의 크기가 2배인 현과 겹쳐 길이 비교하기」를 깼어요. 퀘스트 창에서 동전을 받으세요.</p>';
+  if (first) $('clRes').innerHTML += `<p class="cl-hq">🎉 퀘스트 완료! 「중심각의 크기가 2배인 현과 겹쳐 길이 비교하기」를 깼어요. 🪙 동전 ${questCoin(QUESTS.find(q => q.id === 's_chord_prop'))}개를 받았어요.</p>`;
   $('clRes').classList.remove('hidden'); $('clMsg').textContent = '';
   qDone('s_chord_prop');
+  setTimeout(clBackToSectors, 2500);                              // 비교한 뒤에는 다시 두 부채꼴에 세 현을 그린 그림으로
+}
+// 비교를 마치면: 처음 그림(붙여 놓은 두 부채꼴)으로 돌아가 현 AB·BC·AC를 모두 그어 둔 채로 보여 줌
+function clBackToSectors() {
+  if (!CL.on || !CL.done || CL.phase === 'draw') return;
+  CL.phase = 'draw'; CL.lines = ['AB', 'BC', 'AC']; CL.drag = null;
+  $('clInfo').innerHTML = `처음 그림으로 돌아왔어요. 중심각이 <b>${CL.x}°</b>인 작은 부채꼴의 현 AB, BC와 중심각이 <b>${2 * CL.x}°</b>인 큰 부채꼴의 현 AC를 함께 보세요.`;
+  $('clJoin').classList.add('hidden'); $('clMsg').textContent = '';
+  chordLabDraw();
 }
 function chordLabClose() { CL.on = false; $('chordLab').classList.add('hidden'); }
 function initChordLab() {
@@ -9131,16 +9141,26 @@ function flSecDrop(A) {
       const score = d + df / 60; if (!best || score < best.score) best = { B, after, score };
     }
   }
-  if (!best) {
-    if (near) {                                                     // 가까이 놓았지만 반지름끼리 맞대지 않음 → 겹쳐 놓을 수 없음
-      const B = near[1], ov = arcOverlap(A.a0, A.ang, B.a0, B.ang);
-      if (ov > 1) { toast('부채꼴끼리는 겹쳐 놓을 수 없어요. 반지름끼리 꼭 맞대면 합쳐져요.', 'var(--bad)'); const bk = FL.dragFrom || [A.x + 1.2, A.y]; A.x = bk[0]; A.y = bk[1]; flSecDraw(A); }
-    }
-    return;
-  }
+  if (!best) { flDblOverlap(A); return; }                           // 반지름끼리 맞대지 않았으면 그 자리에 그냥 놓음 (부채꼴끼리 겹쳐도 됨)
   const B = best.B;
   if (Math.abs(A.rc - B.rc) > 1e-6) { toast('반지름의 길이가 같은 부채꼴끼리만 합칠 수 있어요.', 'var(--bad)'); const bk = FL.dragFrom || [A.x + 1.2, A.y]; A.x = bk[0]; A.y = bk[1]; flSecDraw(A); return; }
   flMerge(A, B, best.after);
+}
+// 퀘스트: 반지름이 같고 중심각이 2배인 두 부채꼴을 중심을 맞춰 겹침 (작은 부채꼴이 큰 부채꼴 안에 거의 다 들어가야 함)
+function flDblOverlap(A) {
+  for (const B of FL.secs) {
+    if (B === A || B.ang >= 360 || A.ang >= 360 || Math.abs(B.rc - A.rc) > 1e-6 || Math.hypot(B.x - A.x, B.y - A.y) > .05) continue;
+    const sm = A.ang <= B.ang ? A : B, bg = sm === A ? B : A;
+    if (Math.abs(bg.ang - 2 * sm.ang) > 1e-6 || arcOverlap(sm.a0, sm.ang, bg.a0, bg.ang) < sm.ang * .9) continue;
+    if (qd('s_dbl_over')) { toast(`🍰 ${sm.ang}°와 ${bg.ang}°: 중심각이 2배인 부채꼴을 겹쳤어요.`, '#7a4dff'); return; }
+    const rc = sm.rc;
+    explain('🍰 중심각이 2배인 부채꼴을 겹쳤어요', `<p>반지름의 길이가 <b>${rc} cm</b>로 같은 두 부채꼴의 중심각의 크기가 <b>${sm.ang}°</b>와 <b>${bg.ang}°</b>로 2배예요.
+      작은 부채꼴 2개를 이어 붙이면 큰 부채꼴과 꼭 겹쳐요.</p>
+      <p>한 원에서 호의 길이와 넓이는 중심각의 크기에 <b>정비례</b>해요. 그래서 큰 부채꼴의 호의 길이와 넓이도 작은 부채꼴의 <b>2배</b>예요.</p>
+      <span class="eq">(호의 길이) ${piH(rc * sm.ang, 180)} cm → <b>${piH(rc * bg.ang, 180)} cm</b><br>(넓이) ${piH(rc * rc * sm.ang, 360)} cm² → <b>${piH(rc * rc * bg.ang, 360)} cm²</b></span>
+      <p>하지만 <b>현의 길이는 2배가 아니에요.</b> 현의 길이는 중심각의 크기에 정비례하지 않아요.</p>`, { color: '#7a4dff', quest: 's_dbl_over' });
+    return;
+  }
 }
 function flMerge(A, B, side) {
   if (A.ang + B.ang > 360 + 1e-6) { toast('두 부채꼴을 합치면 360°를 넘어요.', 'var(--bad)'); A.x += 1; flSecDraw(A); return; }
@@ -9357,8 +9377,8 @@ function flGrabMove(dx, dy, ndc) {
   }
   if (d.kind === 'sec') {
     const S = d.S; S.x = fw[0] - d.off[0]; S.y = fw[1] - d.off[1]; d.moved += Math.hypot(dx, dy);
-    // 자석: 반지름이 같은 부채꼴의 중심 가까이 오면 중심이 딱 붙고, 반지름끼리 가까우면 반지름도 맞붙음
-    const B = FL.secs.filter(s => s !== S && Math.abs(s.rc - S.rc) < 1e-6 && !(FL.cmp && (s === FL.cmp.sm || s === FL.cmp.bg))).map(s => [Math.hypot(s.x - S.x, s.y - S.y), s]).filter(([q]) => q < .55).sort((a, b) => a[0] - b[0])[0]?.[1];
+    // 자석: 반지름이 같은 부채꼴의 중심 아주 가까이 와야 중심이 딱 붙고, 반지름끼리 가까우면 반지름도 맞붙음 (그 밖에서는 겹쳐 놓을 수 있음)
+    const B = FL.secs.filter(s => s !== S && Math.abs(s.rc - S.rc) < 1e-6 && !(FL.cmp && (s === FL.cmp.sm || s === FL.cmp.bg))).map(s => [Math.hypot(s.x - S.x, s.y - S.y), s]).filter(([q]) => q < .3).sort((a, b) => a[0] - b[0])[0]?.[1];
     if (B) { S.x = B.x; S.y = B.y; if (flSnapA0(S)) flSecDraw(S); }
     S.g.position.copy(P3(S.x, S.y, S.lift)); flInfoFollow(S, false);
   }
@@ -10235,7 +10255,7 @@ function ttAutoDrop() {
 function ttEnd(why) {
   if (!TT.on) return;
   TT.on = false; TT.drag = null; TT.ghost = null; $('ttCur').classList.remove('dragging');
-  const coins = Math.floor(TT.score / 150); if (coins) addCoins(coins);   // 150점마다 동전 1개
+  const coins = Math.min(30, Math.floor(TT.score / 500)); if (coins) addCoins(coins);   // 500점마다 동전 1개, 한 판에 최대 30개
   playAdd('tile');                                                // 🔒 타일 테트리스 3번 → 원이 열림
   const s = ttStore(), at = Date.now(); s.recs.push({ score: TT.score, at }); s.recs.sort((a, b) => b.score - a.score); s.recs = s.recs.slice(0, 50); ttSave(s);
   const dt = t => { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
@@ -10450,6 +10470,9 @@ document.addEventListener('click', e => {
 });
 // ── 📢 업데이트 소식: 첫 화면 [업데이트] 버튼. 새 소식은 맨 위에 하나씩 추가 ──
 const UPDATES = [
+  ['11월 11일 업데이트', [
+    '원과 부채꼴과 관련된 새로운 퀘스트가 생겼습니다.',
+  ]],
   ['11월 10일 업데이트', [
     '상점에서 뽑기 금액이 올랐습니다.',
     '신화 등급 칭호 디자인이 수정되었습니다.',
@@ -10502,11 +10525,12 @@ const LOCKS = {
     msg: '✂️ 대각선 그리기 퀘스트를 모두 깼어요! 이제 다각형 [자르기] 기능을 쓸 수 있어요.' },
 };
 // 선생님 코드로 정한 잠금 (CLOSET.lockSet[k]: 'open' 강제로 열기, 'closed' 강제로 잠그기, 없으면 조건대로)
-const isOpen = k => { if (!LOCKS[k]) return true; const f = (CLOSET.lockSet || {})[k]; return f === 'open' ? true : f === 'closed' ? false : LOCKS[k].ok(); };
+// 한 번 열린 것(CLOSET.opened)은 계속 열림: 나중에 퀘스트가 새로 생겨 조건을 다시 못 채워도 잠기지 않게
+const isOpen = k => { if (!LOCKS[k]) return true; const f = (CLOSET.lockSet || {})[k]; return f === 'open' ? true : f === 'closed' ? false : LOCKS[k].ok() || !!(CLOSET.opened || {})[k]; };
 function lockSetCode(keys, f) {
   CLOSET.lockSet = CLOSET.lockSet || {};
   for (const k of keys) { if (f) CLOSET.lockSet[k] = f; else delete CLOSET.lockSet[k]; }
-  if (f !== 'open') for (const k of keys) if (!isOpen(k)) delete (CLOSET.opened || {})[k];   // 다시 열리면 알림이 또 뜨게
+  if (f !== 'open') for (const k of keys) delete (CLOSET.opened || {})[k];   // 잠그거나 원래대로 돌리면 '한 번 열림'도 지움 (조건을 이룬 것은 lockCheck가 다시 열고, 다시 열리면 알림이 또 뜸)
   closetSave(); lockCheck(true);
   const nm = keys.length === 1 ? `「${LOCKS[keys[0]].nm}」` : '모든 콘텐츠';
   codeMsg(f === 'open' ? `🔓 ${nm}의 잠금을 풀었어요.` : f === 'closed' ? `🔒 ${keys.length === 1 ? nm + '을(를)' : '모든 콘텐츠를'} 잠갔어요. (같은 코드를 한 번 더 입력하면 열려요)` : '↩️ 잠금을 원래대로 돌렸어요. 조건을 이룬 것만 열려요.', 'ok');
