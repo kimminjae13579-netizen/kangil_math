@@ -5986,7 +5986,7 @@ document.addEventListener('keydown', e => {
   clearTimeout(qKeyT);
   if (qKeys.length < 6) return;
   qKeyT = setTimeout(() => {
-    if (codeHash(qKeys) !== '16mk66d1wdjwu') return;
+    if (codeHash(qKeys) !== 'm1a4lh-e2tc8t') return;
     qKeys = ''; qReveal = !qReveal;
     toast(qReveal ? '🔓 히든 퀘스트를 볼 수 있어요! (퀘스트 창)' : '🔒 히든 퀘스트를 다시 숨겼어요.', '#7a4dff');
     if (!$('questModal').classList.contains('hidden')) qRender();
@@ -7872,24 +7872,24 @@ function codeHash(s) {
 // 잠금 코드: 열려 있으면 잠그고, 잠겨 있으면 엶 (모든 잠금 코드도 같음: 모두 열려 있으면 모두 잠금)
 function lockToggle(keys) { lockSetCode(keys, keys.every(isOpen) ? 'closed' : 'open'); }
 const CODES = [
-  ['lf8mklbx91nw', () => allReset()],
-  ['butu85-4n7lzx', () => coinAsk(1)], ['1w16zlx-tpbg8j', () => coinAsk(-1)],
+  ['1wutnb9px5xn3', () => allReset()],
+  ['1vn9q9x-mr0ln7', () => coinAsk(1)], ['1dj9s91-k69h5x', () => coinAsk(-1)],
   // 퀘스트: 테마마다 일반 퀘스트 달성 ↔ 초기화 (히든 퀘스트는 아래 '히든 퀘스트 고르기'로)
-  ...[['poly2', '177py9x-seenlp'], ['circ', '12s57id1angzy'], ['tile', 'd0a3wl-ifq0lo'], ['cards', '7bjdj98x77vn'], ['pizza', '1ksnydheiyn5c'], ['poly', '1cq40jp61bdcv'], ['plat', '1z0eqmdmd8jy1'],
-    ['rev', '1rbm69x3z6epj'], ['g1', '1qd1q2tbu4bz4'], ['g2', '1qfroatdfgpod'], ['g3', '1n0ruf9aptrow'], ['all', 'h6fbglwndwnn']].map(([k, h]) => [h, () => questToggle(k)]),
-  ['1xgioudemulit', () => hiddenPick()],
-  ['22giit-4ey9wd', () => toggleRevealHidden()],
-  ['1pgbsxxfxxeji', () => chestDropNow()],
+  ...[['poly2', '1eu52rp-s7kn4'], ['circ', 'm6lbd1-mytf9e'], ['tile', '72w05h-6072to'], ['cards', '1sj8sed-59ji9c'], ['pizza', '18zks05-owk9pk'], ['poly', 'j168cl-b3p839'], ['plat', '5mltfp-ragghn'],
+    ['rev', '1hnjb2d-ry0qdy'], ['g1', 'd3q091-1tkofr'], ['g2', '178tbglknrufv'], ['g3', 'dmoog5-aaj36s'], ['all', '9ccchx-w6blne']].map(([k, h]) => [h, () => questToggle(k)]),
+  ['1itnuthb7ms5x', () => hiddenPick()],
+  ['ffzm85lj3zwz', () => toggleRevealHidden()],
+  ['r9mm2t-vtmmrf', () => chestDropNow()],
   // 잠금: 열기 ↔ 잠그기
-  ['292bwl44ji20', () => lockToggle(Object.keys(LOCKS))],
-  ['moid6tk9e8yu', () => lockSetCode(Object.keys(LOCKS), null)],
-  ...[['tiles', '1tj5arpykh3as'], ['circle', '1wn6qf99ml1dp'], ['cards', '6y9rr9-x5v39u'], ['pizza', 'wotmf9-tibw5i'], ['w3d', 'h4p41x4wqwnf'], ['plat', 'dgmzb9jm3cwn'], ['game1', '1tyczwl-cum7jq'],
-    ['game2', 'z0s405-l76nhn'], ['rev', 'dx6yf9-twp3bt'], ['lab', '1n9mtad-tbhmmc'], ['game3', '1850zwl-p4p5xs'], ['cut2d', '16iy1c5uvqwq4']].map(([k, h]) => [h, () => lockToggle([k])]),
-  ['a97zd1-qyu4se', () => titleAll()], ['alqzidithrdm', () => titleReset()],
-  ['1gw5745-18evyf', () => titleGive('t_cardm')], ['rk5kqt-2s0md9', () => titleGive('t_time')], ['1xbquytxcggea', () => titleGive('t_tetris')],
+  ['xpgy4l-jtt3x5', () => lockToggle(Object.keys(LOCKS))],
+  ['1ymochxhm1g8', () => lockSetCode(Object.keys(LOCKS), null)],
+  ...[['tiles', 'qm2lol2k9ed8'], ['circle', '1xlwjetdoiqqt'], ['cards', '133x9z9-ns85j1'], ['pizza', 'sh2fnpzs43'], ['w3d', '1lxsr45-va641w'], ['plat', '1ltxio5-b20mi0'], ['game1', '7vr939-44vl9f'],
+    ['game2', '10nffwl1azhcz'], ['rev', '102si11vi6eo'], ['lab', '1kbt0p1-nf5gv9'], ['game3', 'q24x1h6fwfcm'], ['cut2d', '87mkat-xlppnn']].map(([k, h]) => [h, () => lockToggle([k])]),
+  ['1enl51-6w4s89', () => titleAll()], ['a9d9vpcl0qgz', () => titleReset()],
+  ['y9dy9xoeynz5', () => titleGive('t_cardm')], ['njvnb9drp454', () => titleGive('t_time')], ['rqmyx1-897syy', () => titleGive('t_tetris')],
   // 상점: 모두 받기 ↔ 초기화
-  ...[['hat', '1c10mdhz2lvf6'], ['top', 'vjdvet6xslie'], ['cloud', '5wsxc5-to87kf'], ['gloves', 'af10lh-4wzicb'], ['friend', 'hps091-x0mc0u'], ['trail', '1ya8fgl-fub23'], ['pose', '146qhc5kxx24c']].map(([k, h]) => [h, () => shopToggle(k)]),
-  ['tj0uv9-8063h', () => costumeReset()],
+  ...[['hat', 'b1usatcfadx'], ['top', '9vfgslp6f9ge'], ['cloud', '1riert1-lq5bwu'], ['gloves', 'd3ohc5-e5naaq'], ['friend', '1h2v4qtsgbne1'], ['trail', 'u7eclh-qys80c'], ['pose', 'tanzr9-6wnhia']].map(([k, h]) => [h, () => shopToggle(k)]),
+  ['bnqy852k406z', () => costumeReset()],
 ];
 // 상점에서 뽑은 포즈를 모두 지움 (다시 뽑을 수 있음)
 function poseReset() {
