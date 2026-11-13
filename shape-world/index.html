@@ -5488,7 +5488,7 @@ function initExtras() {
 
 // ── 퀘스트 ──
 // 퀘스트 창: 윗줄에서 2D 세계 / 3D 세계를 고르면 아랫줄에 그 세계의 탭만 나옴
-const Q_CATS = [['poly2', '다각형'], ['circ', '원과 부채꼴'], ['tile', '타일 테트리스'], ['cards', '카드 짝 맞추기'], ['pizza', '고양이 피자 가게'],
+const Q_CATS = [['poly2', '다각형'], ['tile', '타일 테트리스'], ['circ', '원과 부채꼴'], ['cards', '카드 짝 맞추기'], ['pizza', '고양이 피자 가게'],
   ['poly', '다면체'], ['plat', '정다면체'], ['rev', '회전체'], ['g1', '회전체 탐정단'], ['g2', '빙글빙글 회전 화가'], ['g3', '딱 맞춰 붓기 대작전']];
 const Q_2D = new Set(['poly2', 'circ', 'tile', 'cards', 'pizza']);
 const qWorld = k => Q_2D.has(k) ? '2d' : '3d';
