@@ -10598,7 +10598,7 @@ document.addEventListener('click', e => {
   e.stopImmediatePropagation(); e.preventDefault();
   toast('🔒 ' + el.dataset.lockMsg, '#7a4dff', true);
 }, true);
-// ── 🎁 보물상자: 2D·3D 도형 세계에 4분마다 하나씩 내려옴 (최대 3개). 고양이가 가까이 가면 문제, 맞히면 동전 10~15 ──
+// ── 🎁 보물상자: 2D·3D 도형 세계에 6분마다 하나씩 내려옴 (최대 3개). 고양이가 가까이 가면 문제, 맞히면 동전 10~15 ──
 // 문제는 하~중 난이도, 답은 자연수 (π가 붙는 답은 π 앞의 수를 누름)
 // 2D: 「원」이 열려야 상자가 내려옴 → 다각형 문제 (+고양이 피자 가게를 끝까지 깨면 원·부채꼴 문제도)
 // 3D: 「회전체」가 열려야 상자가 내려옴 → 다면체·정다면체 문제 (+「아르키메데스 실험실」이 열리면 회전체 문제도)
@@ -10661,7 +10661,7 @@ function chestQuestion(w) {
   const more = chestMore(w), cats = w === '2d' ? ['poly', ...(more ? ['circ'] : [])] : ['poly3', ...(more ? ['rev'] : [])];
   return PK(CHEST_Q[PK(cats)])();
 }
-const CHEST_EVERY = 240, CHEST_MAX = 3;                               // 4분마다, 최대 3개
+const CHEST_EVERY = 360, CHEST_MAX = 3;                               // 6분마다, 최대 3개
 const CH = { '2d': { list: [], t: 0, last: 0 }, '3d': { list: [], t: 0, last: 0 }, cur: null, memo: null };
 function chestEnv(w) {
   if (w === '2d') return FL.v && FL.cat ? { v: FL.v, cat: FL.cat, s: FL.cs, y: 0, scr: 'flat' } : null;
