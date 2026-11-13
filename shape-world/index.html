@@ -292,6 +292,11 @@
   .chest-rw .rw-ic { font-size: 4rem; line-height: 1; animation: pop .5s cubic-bezier(.2,1.6,.4,1); }
   .chest-rw h2 { margin: 6px 0 4px; font-size: 1.6rem; color: #8a5a00; }
   .chest-rw .rw-coin { font-family: "Jua", sans-serif; font-size: 2.4rem; color: #d9a800; text-shadow: 0 3px 0 #fff1b0; }
+  .chest-rw .rw-item { margin-top: 10px; padding: 10px; border: 2px dashed #3fcf8e; border-radius: 14px; background: #effff6; display: flex; flex-direction: column; align-items: center; gap: 2px; animation: pop .6s cubic-bezier(.2,1.6,.4,1); }
+  .chest-rw .rw-item img { width: 96px; height: 96px; object-fit: contain; }
+  .chest-rw .rw-item b { font-size: 1.15rem; color: #1f7a4d; }
+  .chest-rw .rw-item small { color: #555; }
+  .chest-rw .rw-lucky { font-family: "Jua", sans-serif; color: #1f9a5d; font-size: 1.1rem; }
   /* 기록표 창 */
   .modal-box.rec-box { width: min(920px, 100%); background: #fff8ef; }
   .rec-box .rec-tabs button { white-space: normal; line-height: 1.25; min-width: 100px; }
@@ -313,7 +318,7 @@
   .upd-item ul { margin: 0; padding-left: 1.2em; line-height: 1.7; }
   @media (max-width: 860px), (orientation: portrait) { .tt-main { grid-template-columns: 1fr; height: auto; } .tt-stage { min-height: 62vh; } }
   .pz-main { flex: 1; min-height: 0; display: flex; padding: 12px; gap: 12px; }
-  .pz-memo { width: 290px; flex: none; display: flex; flex-direction: column; gap: 6px; background: #fff; border: 4px solid #fff; border-radius: 22px; padding: 10px; box-shadow: 0 8px 0 rgba(40,20,140,.3); }
+  .pz-memo { width: 580px; max-width: 48%; flex: none; display: flex; flex-direction: column; gap: 6px; background: #fff; border: 4px solid #fff; border-radius: 22px; padding: 10px; box-shadow: 0 8px 0 rgba(40,20,140,.3); }
   .pz-memo-h { display: flex; align-items: center; gap: 6px; font-family: "Jua", sans-serif; font-size: 1.15rem; }
   .pz-memo-h b { font-weight: 400; margin-right: auto; }
   .pz-memo-tools { display: flex; gap: 4px; }
@@ -332,7 +337,7 @@
   .pz-steps b { color: #e4572e; }
   .pz-formula { text-align: center; margin: 10px 0 0; font-weight: 700; line-height: 2.4; }
   @media (max-width: 860px) { .pz-howto { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 760px) { .pz-main { flex-direction: column; } .pz-memo { width: auto; height: 240px; } }
+  @media (max-width: 760px) { .pz-main { flex-direction: column; } .pz-memo { width: auto; max-width: none; height: 240px; } }
   .pz-main .stage { flex: 1; }
   .pz-hud { position: absolute; left: 14px; top: 12px; display: flex; gap: 8px; flex-wrap: wrap; z-index: 3; max-width: 50%; }
   .pz-chip { font-family: "Jua", sans-serif; background: #fff; border-radius: 999px; padding: 6px 14px; font-size: 1.05rem; box-shadow: 0 3px 0 #e3dcff; white-space: nowrap; }
@@ -1426,7 +1431,7 @@
       <figure><svg viewBox="0 0 160 110"><rect x="18" y="34" width="124" height="42" rx="16" fill="#ff5a3d"/><rect x="18" y="70" width="124" height="8" rx="4" fill="#c2361b"/><text x="80" y="61" text-anchor="middle" font-size="17" font-weight="700" fill="#fff">🍕 잘라서 주기</text></svg><figcaption>③ [잘라서 주기]를 누르면 고양이가 배달해요.</figcaption></figure>
       <figure><svg viewBox="0 0 160 110"><text x="80" y="30" text-anchor="middle" font-size="22">😊 🍕</text><text x="80" y="50" text-anchor="middle" font-size="12" font-weight="700" fill="#0e8a5f">맞으면 동전 🪙</text><text x="80" y="80" text-anchor="middle" font-size="22">😠 ❤️→🤍</text><text x="80" y="100" text-anchor="middle" font-size="12" font-weight="700" fill="#e4372e">틀리면 하트 하나</text></svg><figcaption>④ 틀리면 손님이 화내며 가요. 하트 3개를 다 잃으면 끝!</figcaption></figure>
     </div>
-    <div class="pz-steps"><span><b>1단계</b> 피자의 호의 길이와 넓이 말하기</span><span><b>2단계</b> 넓이 · 호의 길이 주문</span><span><b>3단계</b> 반지름까지 골라요</span><span>단계마다 주문 4개</span></div>
+    <div class="pz-steps"><span><b>1단계</b> 피자의 호의 길이와 넓이 말하기</span><span><b>2단계</b> 넓이 · 호의 길이 주문</span><span><b>3단계</b> 반지름까지 골라요</span><span>단계마다 주문 3개</span></div>
     <p class="pz-formula">(부채꼴의 넓이) = πr² × <span class="fr"><span>x</span><span>360</span></span> &nbsp;&nbsp; (호의 길이) = 2πr × <span class="fr"><span>x</span><span>360</span></span></p>
     <div style="text-align:center;margin-top:14px"><button class="pz-give" id="pzGo">가게 열기!</button></div>
   </div>
@@ -1739,6 +1744,7 @@
     <div class="rw-ic">🎁</div>
     <h2>보물상자를 열었어요!</h2>
     <div class="rw-coin" id="chestRwCoin"></div>
+    <div class="rw-item hidden" id="chestRwItem"></div>
     <button class="gacha-go" id="chestRwOk" style="margin-top:14px">확인</button>
   </div>
 </div>
@@ -5567,8 +5573,8 @@ const QUESTS = [
   { cat: 'cards', id: 'cd_miss5', t: '오답 5번 이하로 카드 짝 맞추기 성공하기', d: '짝이 아닌 카드를 고른 횟수가 5번 이하가 되게 끝까지 맞혀요.', coin: 30, ic: '🎯' },
   { cat: 'cards', id: 'cd_nobomb', t: '폭탄을 한 번도 건드리지 않고 카드 짝 맞추기 성공하기', d: '폭탄 카드를 한 번도 뒤집지 않고 끝까지 맞혀요.', hidden: true, coin: 100, ic: '💣' },
   // ── 고양이 피자 가게 ──
-  { cat: 'pizza', id: 'pz_1', t: '피자 가게 1단계: 호의 길이와 넓이 말하기', d: '손님이 주문한 피자의 호의 길이와 넓이를 구해서 4번 맞혀요.', coin: 15, ic: '🍕' },
-  { cat: 'pizza', id: 'pz_2', t: '피자 가게 2단계: 넓이 · 호의 길이 주문 해내기', d: '넓이 주문과 호의 길이 주문이 섞여 나와요. 4개를 배달해요.', coin: 15, ic: '🛵' },
+  { cat: 'pizza', id: 'pz_1', t: '피자 가게 1단계: 호의 길이와 넓이 말하기', d: '손님이 주문한 피자의 호의 길이와 넓이를 구해서 3번 맞혀요.', coin: 15, ic: '🍕' },
+  { cat: 'pizza', id: 'pz_2', t: '피자 가게 2단계: 넓이 · 호의 길이 주문 해내기', d: '넓이 주문과 호의 길이 주문이 섞여 나와요. 3개를 배달해요.', coin: 15, ic: '🛵' },
   { cat: 'pizza', id: 'pz_3', t: '피자 가게 3단계: 반지름까지 정해서 배달하기', d: '호의 길이와 넓이를 보고 피자 크기와 중심각을 모두 정해요.', coin: 15, ic: '👨‍🍳' },
   { cat: 'pizza', id: 'pz_perfect', t: '피자 가게 하트 하나도 안 잃고 3번 끝내기', d: '피자 가게 3단계까지 한 번도 틀리지 않고 배달하기를 3번 해내요.', hidden: true, coin: 100, ic: '🏆' },
   // ── 타일 테트리스 (한 꼭짓점에 모인 정다각형의 내각의 합이 360°) ──
@@ -8261,7 +8267,16 @@ function flInit() {
   FL.last = performance.now();
   $('flRail').addEventListener('click', e => { if (e.target.closest('[data-fclear]')) { flClearAll(); return; } const b = e.target.closest('[data-fcat]'); if (b) flTogglePop(b.dataset.fcat); });
   $('flPop').addEventListener('click', flPopClick);
-  $('flPop').addEventListener('keydown', e => { if (e.key === 'Enter') { const go = $('flPop').querySelector('[data-fgo]'); if (go) go.click(); } });
+  const flEnterGo = () => {                                          // 엔터: 부채꼴을 고른 상태면 부채꼴, 아니면 첫 만들기 버튼
+    const si = $('flSecIn'), go = si && !si.classList.contains('hidden') ? si.querySelector('[data-fgo="sector"]') : $('flPop').querySelector('[data-fgo]');
+    if (go) go.click();
+  };
+  $('flPop').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.target.closest('[data-close]')) { e.preventDefault(); flEnterGo(); } });
+  document.addEventListener('keydown', e => {                        // 창 밖에 초점이 있어도 엔터로 만들기
+    if (e.key !== 'Enter' || e.repeat || $('flPop').classList.contains('hidden') || !$('flPop').offsetParent) return;
+    if (e.target.closest && (e.target.closest('#flPop') || e.target.closest('input,textarea,select,button,.modal'))) return;
+    e.preventDefault(); flEnterGo();
+  });
   $('flCtx').addEventListener('click', e => {
     const sw = e.target.closest('[data-col]'); if (sw) { $('flCtx').classList.add('hidden'); flSetColor(FL.ctxT, +sw.dataset.col); return; }
     const b = e.target.closest('[data-fa]'); if (!b) return; $('flCtx').classList.add('hidden'); flAct(b.dataset.fa, b.dataset.arg);
@@ -9687,7 +9702,7 @@ document.addEventListener('click', e => { const b = e.target.closest('#flat [dat
 // ───────── 고양이 피자 가게: 주문한 넓이·호의 길이에 맞게 부채꼴로 잘라 배달 ─────────
 // 손님(3D 강아지·돼지·토끼·호랑이)이 걸어와 고양이 옆에서 직접 주문 → 맞으면 피자를 받고 인사하며 돌아감, 틀리면 화내며 말없이 돌아감
 const PZ = { v: null, g: null, cat: null, lv: 1, n: 0, hearts: 3, lost: 0, coins: 0, ord: null, r: 6, ang: 45, tops: [], type: null, busy: false, job: null, drag: false, last: 0, cu: null };
-const PZ_RADS = [3, 4, 5, 6, 8, 9, 10, 12], PZ_PER = 4, PZ_COIN = [0, 4, 6, 8];
+const PZ_RADS = [3, 4, 5, 6, 8, 9, 10, 12], PZ_PER = 3, PZ_COIN = [0, 4, 6, 8];
 const PZ_LV = ['', '호의 길이 · 넓이 말하기', '넓이 · 호의 길이 주문', '반지름도 정하기'];
 const PZ_IDLE = [-4.3, -.6];                                       // 고양이가 기다리는 자리
 const PZ_SPOT = [-5.9, .9], PZ_DOOR = [-11, 2.4];                  // 손님이 서는 자리 (고양이 옆), 들어오고 나가는 곳
@@ -10464,6 +10479,13 @@ document.addEventListener('click', e => {
 });
 // ── 📢 업데이트 소식: 첫 화면 [업데이트] 버튼. 새 소식은 맨 위에 하나씩 추가 ──
 const UPDATES = [
+  ['11월 13일 업데이트', [
+    '3D 도형세계 잠금해제 조건이 변경되었습니다.',
+    '고양이 피자가게 한 단계에서 만들어야 하는 피자가 4판에서 3판으로 줄어들었습니다.',
+    '고양이 피자가게 메모장의 크기가 커졌습니다.',
+    '상자를 열었을때 스페셜 보상을 넣었습니다. 스페셜 보상은 수업시간에만 얻을 수 있습니다.',
+    '부채꼴 만들때 enter 누르면 부채꼴이 만들어집니다.',
+  ]],
   ['11월 12일 업데이트', [
     '부채꼴 만들기 퀘스트, 다각형의 내각의 크기 확인하기 퀘스트에서 버그가 수정되었습니다.',
   ]],
@@ -10755,13 +10777,28 @@ function chestTry() {
   const c = CH.cur, ch = c.ch; if (!c.ans) return;
   if (+c.ans === ch.q.a) {                                         // 정답: 상자가 열리고 동전 10~15
     c.done = true; const coin = RI(10, 15); addCoins(coin);
-    CLOSET.chests = (CLOSET.chests || 0) + 1; closetSave();
+    CLOSET.chests = (CLOSET.chests || 0) + 1;
+    // 1% 확률로 상점 물건 1개 (한 번 나오면 다시는 안 나옴)
+    let item = null;
+    if (!CLOSET.chestItem && Math.random() < .01) {
+      const cats = ['hat', 'top', 'cloud', 'gloves', 'trail', 'pose'].filter(k => gachaLeft(k).length);
+      if (cats.length) { item = gachaDraw(cats[Math.floor(Math.random() * cats.length)]); CLOSET.owned[item.id] = true; CLOSET.chestItem = item.id; }
+    }
+    closetSave();
     if (CLOSET.chests >= 12) gainTitle('t_chest');
     $('chestLkIc').textContent = '🔓'; $('chestMsg').className = 'chest-msg ok'; $('chestMsg').textContent = `🎉 딸깍! 상자가 열렸어요! 🪙 동전 ${coin}개!`;
     ch.fx = { k: 'open', t0: performance.now() }; ch.fx.bits = chestBits(ch, [0xffd23d, 0xffe98a], 10, .035);
     setTimeout(() => {                                             // 보상 확인 창
       chestClose(false);
       $('chestRwCoin').textContent = `🪙 +${coin}`;
+      const ri = $('chestRwItem');
+      if (item) {
+        const [, , ic] = SHOP_CATS.find(k => k[0] === item.cat);
+        ri.innerHTML = `<div class="rw-lucky">🍀 스페셜 보상! 상점 물건이 들어 있었어요!</div><img src="${cosThumb(item)}" alt=""><b>${ic} ${item.name}</b><div class="gp-grade">${gradeLabel(gachaGrade(item))}</div>
+          <small>${item.cat === 'pose' ? '고양이를 더블클릭해서 해 보세요.' : item.cat === 'trail' ? '옷장의 ✨ 효과에서 켜 보세요.' : '옷장에서 입어 보세요.'}</small>`;
+        ri.classList.remove('hidden');
+        setTimeout(checkTitles, 400);
+      } else ri.classList.add('hidden');
       $('chestReward').classList.remove('hidden');
     }, 1100); return;
   }
