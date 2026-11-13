@@ -318,7 +318,7 @@
   .upd-item ul { margin: 0; padding-left: 1.2em; line-height: 1.7; }
   @media (max-width: 860px), (orientation: portrait) { .tt-main { grid-template-columns: 1fr; height: auto; } .tt-stage { min-height: 62vh; } }
   .pz-main { flex: 1; min-height: 0; display: flex; padding: 12px; gap: 12px; }
-  .pz-memo { width: 580px; max-width: 48%; flex: none; display: flex; flex-direction: column; gap: 6px; background: #fff; border: 4px solid #fff; border-radius: 22px; padding: 10px; box-shadow: 0 8px 0 rgba(40,20,140,.3); }
+  .pz-memo { width: 470px; max-width: 38%; flex: none; display: flex; flex-direction: column; gap: 6px; background: #fff; border: 4px solid #fff; border-radius: 22px; padding: 10px; box-shadow: 0 8px 0 rgba(40,20,140,.3); }
   .pz-memo-h { display: flex; align-items: center; gap: 6px; font-family: "Jua", sans-serif; font-size: 1.15rem; }
   .pz-memo-h b { font-weight: 400; margin-right: auto; }
   .pz-memo-tools { display: flex; gap: 4px; }
@@ -342,11 +342,11 @@
   .pz-hud { position: absolute; left: 14px; top: 12px; display: flex; gap: 8px; flex-wrap: wrap; z-index: 3; max-width: 50%; }
   .pz-chip { font-family: "Jua", sans-serif; background: #fff; border-radius: 999px; padding: 6px 14px; font-size: 1.05rem; box-shadow: 0 3px 0 #e3dcff; white-space: nowrap; }
   .pz-cust { position: absolute; right: 16px; top: 14px; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; max-width: min(380px, 46%); z-index: 3; pointer-events: none; }
-  .pz-bubble { background: #fff; border-radius: 22px; padding: 10px 16px; font-weight: 800; font-size: 1.08rem; line-height: 1.5; box-shadow: 0 5px 0 rgba(40,20,140,.2); position: absolute; z-index: 3; transform: translate(-50%, -100%); width: max-content; max-width: min(360px, 70%); pointer-events: none; }
+  .pz-bubble { background: #fff; border-radius: 22px; padding: 10px 16px; font-weight: 800; font-size: 1.08rem; line-height: 1.5; box-shadow: 0 5px 0 rgba(40,20,140,.2); position: absolute; z-index: 3; transform: translate(-50%, -100%); width: max-content; max-width: min(360px, calc(100% - 24px)); pointer-events: none; }
   .pz-bubble b { color: #e4572e; font-size: 1.25rem; }
   .pz-bubble.bad { background: #fff0f0; }
   .pz-bubble.ok { background: #eafaf2; }
-  .pz-bubble::after { content: ""; position: absolute; left: 50%; margin-left: -8px; bottom: -18px; border: 8px solid transparent; border-top: 12px solid #fff; }
+  .pz-bubble::after { content: ""; position: absolute; left: var(--tail, 50%); margin-left: -8px; bottom: -18px; border: 8px solid transparent; border-top: 12px solid #fff; }
   .pz-bubble.bad::after { border-top-color: #fff0f0; } .pz-bubble.ok::after { border-top-color: #eafaf2; }
   .pz-face { font-size: 3.6rem; line-height: 1; margin-right: 14px; filter: drop-shadow(0 4px 0 rgba(0,0,0,.12)); }
   .pz-bar { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap;
@@ -10045,7 +10045,9 @@ function pzCustomerTick(now, t, dt) {
     const hp = A.head.getWorldPosition(new THREE.Vector3()); hp.y += .55;
     hp.project(PZ.v.camera);
     const st = $('pzStage'), x = (hp.x + 1) / 2 * st.clientWidth, y = (1 - hp.y) / 2 * st.clientHeight;
-    b.style.left = clamp(x, 130, st.clientWidth - 130) + 'px'; b.style.top = Math.max(60, y) + 'px';
+    const hw = b.offsetWidth / 2 + 8, bx = hw * 2 + 16 > st.clientWidth ? st.clientWidth / 2 : clamp(x, hw, st.clientWidth - hw);   // 말풍선이 화면 밖으로 잘리지 않게
+    b.style.left = bx + 'px'; b.style.top = Math.max(b.offsetHeight + 12 + (bx - hw < 420 ? ($('pzStage').querySelector('.pz-hud')?.offsetHeight || 0) + 14 : 0), y) + 'px';   // 왼쪽 위 칩과 겹치지 않게
+    b.style.setProperty('--tail', clamp(x - bx + b.offsetWidth / 2, 24, b.offsetWidth - 24) + 'px');   // 꼬리는 손님 쪽으로
   }
 }
 // 매 장면: 고양이 (기다리기 → 피자로 가기 → 조각 들고 손님에게 → 돌아오기)
